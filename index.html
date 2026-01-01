@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -13,18 +12,51 @@
         body { background: var(--bg); color: var(--fg); font-family: var(--font); margin: 0; padding: 40px 20px; }
         #container { max-width: 540px; margin: auto; }
 
-        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 48px; }
+        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; flex-wrap: wrap;}
         .logo { font-weight: 800; font-size: 14px; letter-spacing: -0.05em; display: flex; align-items: center; }
         .logo svg { margin-right: 8px; }
-        .status { font-size: 12px; color: var(--accents-8); display: flex; align-items: center; }
+        .status { font-size: 12px; color: var(--accents-8); display: flex; align-items: center; margin-top: 5px; }
         .status-dot { width: 6px; height: 6px; background: var(--success); border-radius: 50%; margin-right: 8px; box-shadow: 0 0 8px var(--success); }
+
+        .comparison-mode-selector {
+            margin-left: 15px;
+            font-size: 11px;
+            color: var(--accents-8);
+            display: flex;
+            align-items: center;
+        }
+        .comparison-mode-selector label {
+            margin-right: 5px;
+        }
+        .comparison-mode-selector select {
+            background: var(--accents-1);
+            color: var(--fg);
+            border: 1px solid var(--accents-2);
+            border-radius: 4px;
+            padding: 3px 5px;
+            font-size: 11px;
+            outline: none;
+        }
+        .comparison-mode-selector select:focus {
+            border-color: #0070f3;
+        }
+
+        .cofl-credit {
+            font-size: 10px;
+            color: var(--accents-8);
+            text-align: right;
+            margin-top: -15px; /* Adjust as needed to position it correctly */
+            margin-bottom: 20px;
+        }
+        .cofl-credit a { color: #0070f3; text-decoration: none; }
+        .cofl-credit a:hover { text-decoration: underline; }
 
         .card {
             background: var(--bg); border: 1px solid var(--accents-2); border-radius: 8px;
             margin-bottom: 16px; position: relative; overflow: hidden;
             animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }        
 
         .card-inner { padding: 24px; }
         .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
@@ -36,13 +68,24 @@
         .price-section { display: flex; align-items: baseline; gap: 12px; margin-top: 12px; }
         .price-main { font-size: 24px; font-weight: 800; }
         .discount-badge { font-size: 12px; font-weight: 600; color: var(--success); background: rgba(0, 255, 65, 0.1); padding: 2px 8px; border-radius: 12px; }
+        
+        .reference-prices {
+            font-size: 11px;
+            color: var(--accents-8);
+            margin-top: 8px;
+            line-height: 1.4;
+        }
+        .reference-prices span {
+            color: var(--fg);
+            font-weight: 500;
+        }
 
         .timer-container { width: 100%; height: 1px; background: var(--accents-1); position: relative; }
         .timer-bar {
             height: 100%; background: #fff; width: 100%;
             transform-origin: left; animation: shrink 45s linear forwards;
         }
-        @keyframes shrink { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+        @keyframes shrink { from { transform: scaleX(1); } to { transform: scaleX(0); } }        
 
         .btn {
             background: var(--fg); color: var(--bg); border: none; width: 100%;
@@ -59,8 +102,19 @@
                 <svg width="24" height="24" viewBox="0 0 76 65" fill="#fff"><path d="M37.5 0L75 65H0L37.5 0Z"/></svg>
                 SNIPER V2
             </div>
-            <div class="status"><div class="status-dot"></div> <span id="session-timer">0M 0S</span></div>
+            <div class="status">
+                <div class="status-dot"></div> 
+                <span id="session-timer">0M 0S</span>
+                <div class="comparison-mode-selector">
+                    <label for="comparisonMode">Compare to:</label>
+                    <select id="comparisonMode">
+                        <option value="next_bin" selected>Next Lowest BIN</option>
+                        <option value="cofl_avg">COFL 7-Day Avg</option>
+                    </select>
+                </div>
+            </div>
         </div>
+        <div class="cofl-credit">Price history data provided by <a href="https://coflnet.com" target="_blank">coflnet.com</a></div>
         <div id="deals"></div>
     </div>
     <audio id="beep" src="https://actions.google.com/sounds/v1/notifications/beeps_pristine_cut_off.ogg"></audio>
@@ -71,6 +125,13 @@
             const diff = Math.floor((Date.now() - startTime) / 1000);
             document.getElementById('session-timer').innerText = `${Math.floor(diff/60)}M ${diff%60}S`;
         }, 1000);
+
+        let currentComparisonMode = document.getElementById('comparisonMode').value;
+
+        document.getElementById('comparisonMode').addEventListener('change', (event) => {
+            currentComparisonMode = event.target.value;
+            document.getElementById('deals').innerHTML = ''; // Clear deals on mode change
+        });
 
         async function fetchWithRetry(url) {
             const proxies = [`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`, `https://corsproxy.io/?${encodeURIComponent(url)}` ];
@@ -124,12 +185,23 @@
 
         async function update() {
             try {
-                const r = await fetch('https://skyblock-483009.uc.r.appspot.com/data');
+                const r = await fetch(`https://skyblock-483009.uc.r.appspot.com/data?mode=${currentComparisonMode}`);
                 const data = await r.json();
+                document.querySelector('.status').childNodes[4].nodeValue = data.status; // Update status text
+
                 data.deals.forEach(d => {
                     if (document.getElementById(d.id)) return;
+
                     const div = document.createElement('div');
                     div.className = 'card'; div.id = d.id;
+
+                    let displayedDiscount = '';
+                    if (currentComparisonMode === 'next_bin') {
+                        displayedDiscount = d.disc_vs_next_bin;
+                    } else if (currentComparisonMode === 'cofl_avg') {
+                        displayedDiscount = d.disc_vs_cofl;
+                    }
+
                     div.innerHTML = `
                         <div class="card-inner">
                             <div class="card-top">
@@ -138,7 +210,11 @@
                             </div>
                             <div class="price-section">
                                 <div class="price-main">${d.price}</div>
-                                <div class="discount-badge">-${d.disc}%</div>
+                                <div class="discount-badge">-${displayedDiscount}%</div>
+                            </div>
+                            <div class="reference-prices">
+                                <div>Next BIN: <span class="next-bin-price">${d.next_lowest_bin_price}</span></div>
+                                <div>COFL Avg: <span class="cofl-avg-price">${d.cofl_avg_price}</span></div>
                             </div>
                         </div>
                         <div class="timer-container"><div class="timer-bar"></div></div>
@@ -147,9 +223,13 @@
                     document.getElementById('deals').prepend(div);
                     document.getElementById('beep').play().catch(()=>{});
                     loadChart(d.tag, "c-"+d.id);
-                    setTimeout(() => { if(document.getElementById(d.id)) document.getElementById(d.id).remove(); }, 45000);
+                    setTimeout(() => { if(document.getElementById(d.id)) div.remove(); }, 45000);
                 });
-            } catch(e) {}
+            } catch(e) {
+                console.error("Error in update function:", e);
+                // Optionally, update status_text on screen to indicate an error
+                // document.querySelector('.status').childNodes[4].nodeValue = `ERROR: ${e.message.substring(0, 50)}...`;
+            }
             setTimeout(update, 1000);
         }
 
