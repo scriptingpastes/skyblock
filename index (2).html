@@ -1,0 +1,165 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Sniper | Vercel Edition</title>
+    <style>
+        :root {
+            --bg: #000; --accents-1: #111; --accents-2: #333;
+            --fg: #fff; --accents-8: #888; --success: #00ff41;
+            --font: 'Inter', -apple-system, system-ui, sans-serif;
+        }
+        body { background: var(--bg); color: var(--fg); font-family: var(--font); margin: 0; padding: 40px 20px; }
+        #container { max-width: 540px; margin: auto; }
+
+        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 48px; }
+        .logo { font-weight: 800; font-size: 14px; letter-spacing: -0.05em; display: flex; align-items: center; }
+        .logo svg { margin-right: 8px; }
+        .status { font-size: 12px; color: var(--accents-8); display: flex; align-items: center; }
+        .status-dot { width: 6px; height: 6px; background: var(--success); border-radius: 50%; margin-right: 8px; box-shadow: 0 0 8px var(--success); }
+
+        .card {
+            background: var(--bg); border: 1px solid var(--accents-2); border-radius: 8px;
+            margin-bottom: 16px; position: relative; overflow: hidden;
+            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
+
+        .card-inner { padding: 24px; }
+        .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+        .item-name { font-size: 18px; font-weight: 700; letter-spacing: -0.02em; }
+
+        .chart-container { height: 80px; width: 180px; background: #050505; border-radius: 4px; border: 1px solid var(--accents-1); position: relative; }
+        .chart-loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 10px; color: var(--accents-2); }
+
+        .price-section { display: flex; align-items: baseline; gap: 12px; margin-top: 12px; }
+        .price-main { font-size: 24px; font-weight: 800; }
+        .discount-badge { font-size: 12px; font-weight: 600; color: var(--success); background: rgba(0, 255, 65, 0.1); padding: 2px 8px; border-radius: 12px; }
+
+        .timer-container { width: 100%; height: 1px; background: var(--accents-1); position: relative; }
+        .timer-bar {
+            height: 100%; background: #fff; width: 100%;
+            transform-origin: left; animation: shrink 45s linear forwards;
+        }
+        @keyframes shrink { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+
+        .btn {
+            background: var(--fg); color: var(--bg); border: none; width: 100%;
+            padding: 14px; font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity 0.2s ease;
+        }
+        .btn:active { opacity: 0.8; }
+        .axis-label { font-size: 10px; fill: var(--accents-8); font-family: monospace; }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div class="header">
+            <div class="logo">
+                <svg width="24" height="24" viewBox="0 0 76 65" fill="#fff"><path d="M37.5 0L75 65H0L37.5 0Z"/></svg>
+                SNIPER V2
+            </div>
+            <div class="status"><div class="status-dot"></div> <span id="session-timer">0M 0S</span></div>
+        </div>
+        <div id="deals"></div>
+    </div>
+    <audio id="beep" src="https://actions.google.com/sounds/v1/notifications/beeps_pristine_cut_off.ogg"></audio>
+
+    <script>
+        const startTime = Date.now();
+        setInterval(() => {
+            const diff = Math.floor((Date.now() - startTime) / 1000);
+            document.getElementById('session-timer').innerText = `${Math.floor(diff/60)}M ${diff%60}S`;
+        }, 1000);
+
+        async function fetchWithRetry(url) {
+            const proxies = [`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`, `https://corsproxy.io/?${encodeURIComponent(url)}` ];
+            for (let proxy of proxies) {
+                try {
+                    const r = await fetch(proxy);
+                    const j = await r.json();
+                    return proxy.includes('allorigins') ? JSON.parse(j.contents) : j;
+                } catch (e) {}
+            }
+        }
+
+        async function loadChart(tag, chartId) {
+            const container = document.getElementById(chartId);
+            try {
+                const url = `https://sky.coflnet.com/api/item/price/${tag}/history/week`;
+                let raw = await fetchWithRetry(url);
+                if (!raw || raw.length < 2) { container.innerHTML = '<div class="chart-loading">NO HISTORY</div>'; return; }
+
+                let prices = raw.map(d => d.avg);
+                const sortedPrices = [...prices].sort((a, b) => a - b);
+                const median = sortedPrices[Math.floor(sortedPrices.length / 2)];
+                prices = prices.filter(p => p <= median * 5 && p >= median / 5);
+
+                const max = Math.max(...prices), min = Math.min(...prices), range = (max - min) || 1;
+                const width = 180, height = 80, pad = 10;
+                let path = "";
+                prices.forEach((p, i) => {
+                    const x = (i / (prices.length - 1)) * width;
+                    const y = height - ((p - min) / range) * (height - pad * 2) - pad;
+                    path += (i === 0 ? "M" : "L") + ` ${x} ${y}`;
+                });
+
+                container.innerHTML = `
+                    <svg width="${width}" height="${height}" style="overflow:visible">
+                        <line x1="0" y1="20" x2="${width}" y2="20" stroke="#444" stroke-dasharray="2" stroke-width="0.5" />
+                        <line x1="0" y1="40" x2="${width}" y2="40" stroke="#444" stroke-dasharray="2" stroke-width="0.5" />
+                        <line x1="0" y1="60" x2="${width}" y2="60" stroke="#444" stroke-dasharray="2" stroke-width="0.5" />
+                        <line x1="45" y1="0" x2="45" y2="${height}" stroke="#444" stroke-dasharray="2" stroke-width="0.5" />
+                        <line x1="90" y1="0" x2="90" y2="${height}" stroke="#444" stroke-dasharray="2" stroke-width="0.5" />
+                        <line x1="135" y1="0" x2="135" y2="${height}" stroke="#444" stroke-dasharray="2" stroke-width="0.5" />
+                        <path d="${path}" fill="none" stroke="#0070f3" stroke-width="2" stroke-linejoin="round" />
+                        <text x="0" y="${height-2}" class="axis-label">-7d</text>
+                        <text x="${width}" y="${height-2}" class="axis-label" text-anchor="end">NOW</text>
+                        <text x="${width}" y="10" class="axis-label" text-anchor="end">${max.toLocaleString()}</text>
+                        <text x="${width}" y="${height-10}" class="axis-label" text-anchor="end">${min.toLocaleString()}</text>
+                    </svg>
+                `;
+            } catch (e) { container.innerHTML = '<div class="chart-loading">STABLE</div>'; }
+        }
+
+        async function update() {
+            try {
+                const r = await fetch('https://YOUR_BACKEND_URL.com/data');
+                const data = await r.json();
+                data.deals.forEach(d => {
+                    if (document.getElementById(d.id)) return;
+                    const div = document.createElement('div');
+                    div.className = 'card'; div.id = d.id;
+                    div.innerHTML = `
+                        <div class="card-inner">
+                            <div class="card-top">
+                                <div><div style="font-size:12px;color:#888;text-transform:uppercase;letter-spacing:0.05em">Market Listing</div><div class="item-name">${d.name}</div></div>
+                                <div id="c-${d.id}" class="chart-container"><div class="chart-loading">LOADING...</div></div>
+                            </div>
+                            <div class="price-section">
+                                <div class="price-main">${d.price}</div>
+                                <div class="discount-badge">-${d.disc}%</div>
+                            </div>
+                        </div>
+                        <div class="timer-container"><div class="timer-bar"></div></div>
+                        <button class="btn" onclick="cp('${d.cmd}','${d.id}')">Copy /viewauction</button>
+                    `;
+                    document.getElementById('deals').prepend(div);
+                    document.getElementById('beep').play().catch(()=>{});
+                    loadChart(d.tag, "c-"+d.id);
+                    setTimeout(() => { if(document.getElementById(d.id)) document.getElementById(d.id).remove(); }, 45000);
+                });
+            } catch(e) {}
+            setTimeout(update, 1000);
+        }
+
+        function cp(cmd, id) {
+            navigator.clipboard.writeText("/" + cmd).then(() => {
+                const el = document.getElementById(id);
+                if(el) { el.style.opacity = "0.2"; setTimeout(() => el.remove(), 200); }
+            });
+        }
+        update();
+    </script>
+</body>
+</html>
