@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -36,6 +37,10 @@
             padding: 3px 5px;
             font-size: 11px;
             outline: none;
+            -webkit-appearance: none; /* Remove default browser styling */
+            -moz-appearance: none;
+            appearance: none;
+            cursor: pointer;
         }
         .comparison-mode-selector select:focus {
             border-color: #0070f3;
@@ -114,7 +119,7 @@
                 </div>
             </div>
         </div>
-        <div class="cofl-credit">Price history data provided by <a href="https://coflnet.com" target="_blank">coflnet.com</a></div>
+        <div class="cofl-credit">Price history data provided by <a href="https://skyblock.coflnet.com" target="_blank">skyblock.coflnet.com</a></div>
         <div id="deals"></div>
     </div>
     <audio id="beep" src="https://actions.google.com/sounds/v1/notifications/beeps_pristine_cut_off.ogg"></audio>
@@ -147,7 +152,7 @@
         async function loadChart(tag, chartId) {
             const container = document.getElementById(chartId);
             try {
-                const url = `https://sky.coflnet.com/api/item/price/${tag}/history/week`;
+                const url = `https://skyblock.coflnet.com/api/item/price/${tag}/history/week`;
                 let raw = await fetchWithRetry(url);
                 if (!raw || raw.length < 2) { container.innerHTML = '<div class="chart-loading">NO HISTORY</div>'; return; }
 
