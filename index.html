@@ -56,7 +56,7 @@
             margin-bottom: 16px; position: relative; overflow: hidden;
             animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }        
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
 
         .card-inner { padding: 24px; }
         .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
@@ -68,7 +68,7 @@
         .price-section { display: flex; align-items: baseline; gap: 12px; margin-top: 12px; }
         .price-main { font-size: 24px; font-weight: 800; }
         .discount-badge { font-size: 12px; font-weight: 600; color: var(--success); background: rgba(0, 255, 65, 0.1); padding: 2px 8px; border-radius: 12px; }
-        
+
         .reference-prices {
             font-size: 11px;
             color: var(--accents-8);
@@ -85,7 +85,7 @@
             height: 100%; background: #fff; width: 100%;
             transform-origin: left; animation: shrink 45s linear forwards;
         }
-        @keyframes shrink { from { transform: scaleX(1); } to { transform: scaleX(0); } }        
+        @keyframes shrink { from { transform: scaleX(1); } to { transform: scaleX(0); } }
 
         .btn {
             background: var(--fg); color: var(--bg); border: none; width: 100%;
@@ -103,7 +103,7 @@
                 SNIPER V2
             </div>
             <div class="status">
-                <div class="status-dot"></div> 
+                <div class="status-dot"></div>
                 <span id="session-timer">0M 0S</span>
                 <div class="comparison-mode-selector">
                     <label for="comparisonMode">Compare to:</label>
@@ -221,7 +221,7 @@
                         <button class="btn" onclick="cp('${d.cmd}','${d.id}')">Copy /viewauction</button>
                     `;
                     document.getElementById('deals').prepend(div);
-                    document.getElementById('beep').play().catch(()=>{});
+                    document.getElementById('beep').play().catch(()=> {});
                     loadChart(d.tag, "c-"+d.id);
                     setTimeout(() => { if(document.getElementById(d.id)) div.remove(); }, 45000);
                 });
