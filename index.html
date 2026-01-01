@@ -124,7 +124,7 @@
 
         async function update() {
             try {
-                const r = await fetch('https://YOUR_BACKEND_URL.com/data');
+                const r = await fetch('https://peak-emitter-448822-u8.uc.r.appspot.com/');
                 const data = await r.json();
                 data.deals.forEach(d => {
                     if (document.getElementById(d.id)) return;
