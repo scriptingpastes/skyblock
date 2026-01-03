@@ -45,16 +45,6 @@
             border-color: #0070f3;
         }
 
-        .cofl-credit {
-            font-size: 10px;
-            color: var(--accents-8);
-            text-align: right;
-            margin-top: -15px; /* Adjust as needed to position it correctly */
-            margin-bottom: 20px;
-        }
-        .cofl-credit a { color: #0070f3; text-decoration: none; }
-        .cofl-credit a:hover { text-decoration: underline; }
-
         .card {
             background: var(--bg); border: 1px solid var(--accents-2); border-radius: 8px;
             margin-bottom: 16px; position: relative; overflow: hidden;
@@ -113,12 +103,11 @@
                     <label for="comparisonMode">Compare to:</label>
                     <select id="comparisonMode">
                         <option value="next_bin" selected>Next Lowest BIN</option>
-                        <option value="cofl_avg">COFL 7-Day Avg</option>
+                        <option value="avg">7-Day Avg</option>
                     </select>
                 </div>
             </div>
         </div>
-        <div class="cofl-credit">Price history data provided by <a href="https://skyblock.coflnet.com" target="_blank">skyblock.coflnet.com</a></div>
         <div id="deals"></div>
     </div>
     <audio id="beep" src="https://actions.google.com/sounds/v1/notifications/beeps_pristine_cut_off.ogg"></audio>
@@ -151,7 +140,7 @@
         async function loadChart(tag, chartId) {
             const container = document.getElementById(chartId);
             try {
-                const url = `https://skyblock.coflnet.com/api/item/price/${tag}/history/week`;
+                const url = `https://sky.coflnet.com/api/item/price/${tag}/history/week`;
                 let raw = await fetchWithRetry(url);
                 if (!raw || raw.length < 2) { container.innerHTML = '<div class="chart-loading">NO HISTORY</div>'; return; }
 
@@ -200,10 +189,16 @@
                     div.className = 'card'; div.id = d.id;
 
                     let displayedDiscount = '';
+                    let referenceNextBin = '';
+                    let referenceAvg = '';
                     if (currentComparisonMode === 'next_bin') {
                         displayedDiscount = d.disc_vs_next_bin;
-                    } else if (currentComparisonMode === 'cofl_avg') {
-                        displayedDiscount = d.disc_vs_cofl;
+                        referenceNextBin = d.next_lowest_bin_price ? d.next_lowest_bin_price.toLocaleString() : 'N/A';
+                        referenceAvg = d.avg_price ? d.avg_price.toLocaleString() : 'N/A';
+                    } else if (currentComparisonMode === 'avg') {
+                        displayedDiscount = d.disc_vs_avg;
+                        referenceNextBin = d.next_lowest_bin_price ? d.next_lowest_bin_price.toLocaleString() : 'N/A';
+                        referenceAvg = d.avg_price ? d.avg_price.toLocaleString() : 'N/A';
                     }
 
                     div.innerHTML = `
@@ -213,12 +208,12 @@
                                 <div id="c-${d.id}" class="chart-container"><div class="chart-loading">LOADING...</div></div>
                             </div>
                             <div class="price-section">
-                                <div class="price-main">${d.price}</div>
+                                <div class="price-main">${d.price.toLocaleString()}</div>
                                 <div class="discount-badge">-${displayedDiscount}%</div>
                             </div>
                             <div class="reference-prices">
-                                <div>Next BIN: <span class="next-bin-price">${d.next_lowest_bin_price}</span></div>
-                                <div>COFL Avg: <span class="cofl-avg-price">${d.cofl_avg_price}</span></div>
+                                <div>Next BIN: <span class="next-bin-price">${referenceNextBin}</span></div>
+                                <div>7-Day Avg: <span class="avg-price">${referenceAvg}</span></div>
                             </div>
                         </div>
                         <div class="timer-container"><div class="timer-bar"></div></div>
@@ -231,8 +226,6 @@
                 });
             } catch(e) {
                 console.error("Error in update function:", e);
-                // Optionally, update status_text on screen to indicate an error
-                // document.getElementById('backend-status-text').innerText = `ERROR: ${e.message.substring(0, 50)}...`;
             }
             setTimeout(update, 1000);
         }
