@@ -9,17 +9,16 @@
             --fg: #fff; --accents-8: #888; --success: #00ff41;
             --font: 'Inter', -apple-system, system-ui, sans-serif;
         }
-        body { background: var(--bg); color: var(--fg); font-family: var(--font); margin: 0; padding: 40px 20px; }
-        #container { max-width: 540px; margin: auto; }
+        body { background: var(--bg); color: var(--fg); font-family: var(--font); margin: 0; padding: 20px 10px; }
+        #container { max-width: 1400px; margin: auto; }
 
         .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; flex-wrap: wrap;}
         .logo { font-weight: 800; font-size: 14px; letter-spacing: -0.05em; display: flex; align-items: center; }
         .logo svg { margin-right: 8px; }
-        .status { font-size: 12px; color: var(--accents-8); display: flex; align-items: center; margin-top: 5px; }
+        .status { font-size: 12px; color: var(--accents-8); display: flex; align-items: center; margin-top: 5px; gap: 15px; flex-wrap: wrap; }
         .status-dot { width: 6px; height: 6px; background: var(--success); border-radius: 50%; margin-right: 8px; box-shadow: 0 0 8px var(--success); }
 
         .comparison-mode-selector {
-            margin-left: 15px;
             font-size: 11px;
             color: var(--accents-8);
             display: flex;
@@ -36,7 +35,7 @@
             padding: 3px 5px;
             font-size: 11px;
             outline: none;
-            -webkit-appearance: none; /* Remove default browser styling */
+            -webkit-appearance: none;
             -moz-appearance: none;
             appearance: none;
             cursor: pointer;
@@ -45,29 +44,38 @@
             border-color: #0070f3;
         }
 
+        .deals-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 12px;
+        }
+
         .card {
             background: var(--bg); border: 1px solid var(--accents-2); border-radius: 8px;
-            margin-bottom: 16px; position: relative; overflow: hidden;
+            position: relative; overflow: hidden;
             animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
         }
         @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }        
 
-        .card-inner { padding: 24px; }
-        .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
-        .item-name { font-size: 18px; font-weight: 700; letter-spacing: -0.02em; }
+        .card-inner { padding: 16px; flex: 1; }
+        .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 10px; }
+        .item-name { font-size: 14px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.3; }
+        .item-label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
 
-        .chart-container { height: 80px; width: 180px; background: #050505; border-radius: 4px; border: 1px solid var(--accents-1); position: relative; }
-        .chart-loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 10px; color: var(--accents-2); }
+        .chart-container { height: 60px; width: 120px; background: #050505; border-radius: 4px; border: 1px solid var(--accents-1); position: relative; flex-shrink: 0; }
+        .chart-loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 9px; color: var(--accents-2); }
 
-        .price-section { display: flex; align-items: baseline; gap: 12px; margin-top: 12px; }
-        .price-main { font-size: 24px; font-weight: 800; }
-        .discount-badge { font-size: 12px; font-weight: 600; color: var(--success); background: rgba(0, 255, 65, 0.1); padding: 2px 8px; border-radius: 12px; }
+        .price-section { display: flex; align-items: baseline; gap: 8px; margin-top: 8px; }
+        .price-main { font-size: 18px; font-weight: 800; }
+        .discount-badge { font-size: 14px; font-weight: 700; color: var(--success); background: rgba(0, 255, 65, 0.1); padding: 4px 10px; border-radius: 12px; }
         
         .reference-prices {
-            font-size: 11px;
+            font-size: 10px;
             color: var(--accents-8);
             margin-top: 8px;
-            line-height: 1.4;
+            line-height: 1.5;
         }
         .reference-prices span {
             color: var(--fg);
@@ -83,10 +91,16 @@
 
         .btn {
             background: var(--fg); color: var(--bg); border: none; width: 100%;
-            padding: 14px; font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity 0.2s ease;
+            padding: 10px; font-size: 11px; font-weight: 600; cursor: pointer; transition: opacity 0.2s ease;
         }
         .btn:active { opacity: 0.8; }
-        .axis-label { font-size: 10px; fill: var(--accents-8); font-family: monospace; }
+        .axis-label { font-size: 8px; fill: var(--accents-8); font-family: monospace; }
+
+        @media (max-width: 768px) {
+            .deals-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
@@ -97,8 +111,11 @@
                 SNIPER V2
             </div>
             <div class="status">
-                <div class="status-dot"></div>
-                <span id="session-timer">0M 0S</span>&nbsp;<span id="backend-status-text">Initializing...</span>&nbsp;
+                <div style="display: flex; align-items: center;">
+                    <div class="status-dot"></div>
+                    <span id="session-timer">0M 0S</span>
+                </div>
+                <span id="backend-status-text">Initializing...</span>
                 <div class="comparison-mode-selector">
                     <label for="comparisonMode">Compare to:</label>
                     <select id="comparisonMode">
@@ -108,7 +125,7 @@
                 </div>
             </div>
         </div>
-        <div id="deals"></div>
+        <div id="deals" class="deals-grid"></div>
     </div>
     <audio id="beep" src="https://actions.google.com/sounds/v1/notifications/beeps_pristine_cut_off.ogg"></audio>
 
@@ -120,9 +137,11 @@
         }, 1000);
 
         let currentComparisonMode = document.getElementById('comparisonMode').value;
+        let currentDeals = new Map(); // Store deals by ID
 
         document.getElementById('comparisonMode').addEventListener('change', (event) => {
             currentComparisonMode = event.target.value;
+            currentDeals.clear();
             document.getElementById('deals').innerHTML = ''; // Clear deals on mode change
         });
 
@@ -150,7 +169,7 @@
                 prices = prices.filter(p => p <= median * 5 && p >= median / 5);
 
                 const max = Math.max(...prices), min = Math.min(...prices), range = (max - min) || 1;
-                const width = 180, height = 80, pad = 10;
+                const width = 120, height = 60, pad = 8;
                 let path = "";
                 prices.forEach((p, i) => {
                     const x = (i / (prices.length - 1)) * width;
@@ -160,70 +179,100 @@
 
                 container.innerHTML = `
                     <svg width="${width}" height="${height}" style="overflow:visible">
-                        <line x1="0" y1="20" x2="${width}" y2="20" stroke="#444" stroke-dasharray="2" stroke-width="0.5" />
-                        <line x1="0" y1="40" x2="${width}" y2="40" stroke="#444" stroke-dasharray="2" stroke-width="0.5" />
-                        <line x1="0" y1="60" x2="${width}" y2="60" stroke="#444" stroke-dasharray="2" stroke-width="0.5" />
-                        <line x1="45" y1="0" x2="45" y2="${height}" stroke="#444" stroke-dasharray="2" stroke-width="0.5" />
-                        <line x1="90" y1="0" x2="90" y2="${height}" stroke="#444" stroke-dasharray="2" stroke-width="0.5" />
-                        <line x1="135" y1="0" x2="135" y2="${height}" stroke="#444" stroke-dasharray="2" stroke-width="0.5" />
+                        <line x1="0" y1="15" x2="${width}" y2="15" stroke="#444" stroke-dasharray="2" stroke-width="0.5" />
+                        <line x1="0" y1="30" x2="${width}" y2="30" stroke="#444" stroke-dasharray="2" stroke-width="0.5" />
+                        <line x1="0" y1="45" x2="${width}" y2="45" stroke="#444" stroke-dasharray="2" stroke-width="0.5" />
                         <path d="${path}" fill="none" stroke="#0070f3" stroke-width="2" stroke-linejoin="round" />
                         <text x="0" y="${height-2}" class="axis-label">-7d</text>
                         <text x="${width}" y="${height-2}" class="axis-label" text-anchor="end">NOW</text>
-                        <text x="${width}" y="10" class="axis-label" text-anchor="end">${max.toLocaleString()}</text>
-                        <text x="${width}" y="${height-10}" class="axis-label" text-anchor="end">${min.toLocaleString()}</text>
                     </svg>
                 `;
             } catch (e) { container.innerHTML = '<div class="chart-loading">STABLE</div>'; }
+        }
+
+        function renderDeals() {
+            // Sort deals by discount percentage (highest first)
+            const sortedDeals = Array.from(currentDeals.values()).sort((a, b) => {
+                const discountA = currentComparisonMode === 'next_bin' ? a.disc_vs_next_bin : a.disc_vs_avg;
+                const discountB = currentComparisonMode === 'next_bin' ? b.disc_vs_next_bin : b.disc_vs_avg;
+                return (discountB || 0) - (discountA || 0);
+            });
+
+            const dealsContainer = document.getElementById('deals');
+            dealsContainer.innerHTML = '';
+
+            sortedDeals.forEach(d => {
+                const div = document.createElement('div');
+                div.className = 'card';
+                div.id = d.id;
+
+                let displayedDiscount = '';
+                let referenceNextBin = '';
+                let referenceAvg = '';
+                
+                if (currentComparisonMode === 'next_bin') {
+                    displayedDiscount = d.disc_vs_next_bin;
+                } else if (currentComparisonMode === 'avg') {
+                    displayedDiscount = d.disc_vs_avg;
+                }
+                
+                referenceNextBin = d.next_lowest_bin_price ? d.next_lowest_bin_price.toLocaleString() : 'N/A';
+                referenceAvg = d.avg_price ? d.avg_price.toLocaleString() : 'N/A';
+
+                div.innerHTML = `
+                    <div class="card-inner">
+                        <div class="card-top">
+                            <div style="flex: 1; min-width: 0;">
+                                <div class="item-label">Market Listing</div>
+                                <div class="item-name">${d.name}</div>
+                            </div>
+                            <div id="c-${d.id}" class="chart-container"><div class="chart-loading">LOADING...</div></div>
+                        </div>
+                        <div class="price-section">
+                            <div class="price-main">${d.price.toLocaleString()}</div>
+                            <div class="discount-badge">-${displayedDiscount}%</div>
+                        </div>
+                        <div class="reference-prices">
+                            <div>Next BIN: <span class="next-bin-price">${referenceNextBin}</span></div>
+                            <div>7-Day Avg: <span class="avg-price">${referenceAvg}</span></div>
+                        </div>
+                    </div>
+                    <div class="timer-container"><div class="timer-bar"></div></div>
+                    <button class="btn" onclick="cp('${d.cmd}','${d.id}')">Copy /viewauction</button>
+                `;
+                
+                dealsContainer.appendChild(div);
+                loadChart(d.tag, "c-"+d.id);
+            });
         }
 
         async function update() {
             try {
                 const r = await fetch(`https://skyblock-483009.uc.r.appspot.com/data?mode=${currentComparisonMode}`);
                 const data = await r.json();
-                document.getElementById('backend-status-text').innerText = data.status; // Update status text
+                document.getElementById('backend-status-text').innerText = data.status;
+
+                let needsRerender = false;
 
                 data.deals.forEach(d => {
-                    if (document.getElementById(d.id)) return;
-
-                    const div = document.createElement('div');
-                    div.className = 'card'; div.id = d.id;
-
-                    let displayedDiscount = '';
-                    let referenceNextBin = '';
-                    let referenceAvg = '';
-                    if (currentComparisonMode === 'next_bin') {
-                        displayedDiscount = d.disc_vs_next_bin;
-                        referenceNextBin = d.next_lowest_bin_price ? d.next_lowest_bin_price.toLocaleString() : 'N/A';
-                        referenceAvg = d.avg_price ? d.avg_price.toLocaleString() : 'N/A';
-                    } else if (currentComparisonMode === 'avg') {
-                        displayedDiscount = d.disc_vs_avg;
-                        referenceNextBin = d.next_lowest_bin_price ? d.next_lowest_bin_price.toLocaleString() : 'N/A';
-                        referenceAvg = d.avg_price ? d.avg_price.toLocaleString() : 'N/A';
+                    if (!currentDeals.has(d.id)) {
+                        currentDeals.set(d.id, d);
+                        needsRerender = true;
+                        document.getElementById('beep').play().catch(()=> {});
+                        
+                        // Set expiration timer
+                        setTimeout(() => {
+                            if(currentDeals.has(d.id)) {
+                                currentDeals.delete(d.id);
+                                renderDeals();
+                            }
+                        }, 45000);
                     }
-
-                    div.innerHTML = `
-                        <div class="card-inner">
-                            <div class="card-top">
-                                <div><div style="font-size:12px;color:#888;text-transform:uppercase;letter-spacing:0.05em">Market Listing</div><div class="item-name">${d.name}</div></div>
-                                <div id="c-${d.id}" class="chart-container"><div class="chart-loading">LOADING...</div></div>
-                            </div>
-                            <div class="price-section">
-                                <div class="price-main">${d.price.toLocaleString()}</div>
-                                <div class="discount-badge">-${displayedDiscount}%</div>
-                            </div>
-                            <div class="reference-prices">
-                                <div>Next BIN: <span class="next-bin-price">${referenceNextBin}</span></div>
-                                <div>7-Day Avg: <span class="avg-price">${referenceAvg}</span></div>
-                            </div>
-                        </div>
-                        <div class="timer-container"><div class="timer-bar"></div></div>
-                        <button class="btn" onclick="cp('${d.cmd}','${d.id}')">Copy /viewauction</button>
-                    `;
-                    document.getElementById('deals').prepend(div);
-                    document.getElementById('beep').play().catch(()=> {});
-                    loadChart(d.tag, "c-"+d.id);
-                    setTimeout(() => { if(document.getElementById(d.id)) div.remove(); }, 45000);
                 });
+
+                if (needsRerender) {
+                    renderDeals();
+                }
             } catch(e) {
                 console.error("Error in update function:", e);
             }
@@ -232,8 +281,8 @@
 
         function cp(cmd, id) {
             navigator.clipboard.writeText("/" + cmd).then(() => {
-                const el = document.getElementById(id);
-                if(el) { el.style.opacity = "0.2"; setTimeout(() => el.remove(), 200); }
+                currentDeals.delete(id);
+                renderDeals();
             });
         }
         update();
