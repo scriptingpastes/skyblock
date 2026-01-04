@@ -3,74 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <title>Sniper | Vercel Edition</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg: #000; --accents-1: #111; --accents-2: #333;
             --fg: #fff; --accents-8: #888; --success: #00ff41;
-            --font: 'Inter', -apple-system, system-ui, sans-serif;
         }
         
         /* Theme definitions */
-        [data-theme="dark"] {
+        body.theme-dark {
             --bg: #000; --accents-1: #111; --accents-2: #333;
             --fg: #fff; --accents-8: #888; --success: #00ff41;
         }
-        [data-theme="light"] {
+        body.theme-bloomberg {
+            --bg: #000000; --accents-1: #1a1a00; --accents-2: #2a2a00;
+            --fg: #FFA028; --accents-8: #ff8800; --success: #4af6c3;
+        }
+        body.theme-light {
             --bg: #ffffff; --accents-1: #f5f5f5; --accents-2: #e0e0e0;
             --fg: #000; --accents-8: #666; --success: #00c853;
         }
-        [data-theme="blue"] {
+        body.theme-blue {
             --bg: #0a1628; --accents-1: #152238; --accents-2: #1e3a5f;
             --fg: #e0f2fe; --accents-8: #94a3b8; --success: #38bdf8;
         }
-        [data-theme="purple"] {
+        body.theme-purple {
             --bg: #1a0b2e; --accents-1: #2d1b4e; --accents-2: #4c3575;
             --fg: #f0e6ff; --accents-8: #a78bfa; --success: #c084fc;
         }
-        [data-theme="green"] {
+        body.theme-matrix {
             --bg: #0a1f0a; --accents-1: #162d16; --accents-2: #1e4620;
-            --fg: #e6ffe6; --accents-8: #86efac; --success: #4ade80;
+            --fg: #00ff00; --accents-8: #00cc00; --success: #ffff00;
         }
-        [data-theme="cyberpunk"] {
-            --bg: #0d0221; --accents-1: #1b0f3a; --accents-2: #2d1b69;
-            --fg: #ff006e; --accents-8: #8338ec; --success: #ffbe0b;
-        }
-        [data-theme="midnight"] {
-            --bg: #0f172a; --accents-1: #1e293b; --accents-2: #334155;
-            --fg: #f1f5f9; --accents-8: #94a3b8; --success: #06b6d4;
+        body.theme-nord {
+            --bg: #2e3440; --accents-1: #3b4252; --accents-2: #434c5e;
+            --fg: #eceff4; --accents-8: #d8dee9; --success: #a3be8c;
         }
         
-        body { background: var(--bg); color: var(--fg); font-family: var(--font); margin: 0; padding: 20px 10px; transition: background 0.3s ease, color 0.3s ease; }
+        /* Font classes */
+        body.font-inter { font-family: 'Inter', -apple-system, system-ui, sans-serif; }
+        body.font-courier { font-family: 'Courier New', 'Courier', monospace; }
+        body.font-consolas { font-family: 'Consolas', 'Monaco', 'Lucida Console', monospace; }
+        body.font-system { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; }
+        body.font-bloomberg { font-family: 'IBM Plex Mono', 'Roboto Mono', 'Consolas', monospace; }
+        body.font-roboto { font-family: 'Roboto Mono', 'Consolas', monospace; }
+        
+        body { 
+            background: var(--bg); 
+            color: var(--fg); 
+            margin: 0; 
+            padding: 20px 10px; 
+            transition: background 0.3s ease, color 0.3s ease;
+        }
         #container { max-width: 1400px; margin: auto; }
 
-        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; flex-wrap: wrap;}
+        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;}
         .logo { font-weight: 800; font-size: 14px; letter-spacing: -0.05em; display: flex; align-items: center; }
         .logo svg { margin-right: 8px; }
-        .status { font-size: 12px; color: var(--accents-8); display: flex; align-items: center; margin-top: 5px; gap: 15px; flex-wrap: wrap; }
+        .status { font-size: 12px; color: var(--accents-8); display: flex; align-items: center; margin-top: 5px; gap: 10px; flex-wrap: wrap; }
         .status-dot { width: 6px; height: 6px; background: var(--success); border-radius: 50%; margin-right: 8px; box-shadow: 0 0 8px var(--success); }
 
-        .controls {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .comparison-mode-selector, .theme-selector {
+        .comparison-mode-selector, .theme-selector, .font-selector {
             font-size: 11px;
             color: var(--accents-8);
             display: flex;
             align-items: center;
         }
-        .comparison-mode-selector label, .theme-selector label {
+        .comparison-mode-selector label, .theme-selector label, .font-selector label {
             margin-right: 5px;
         }
-        .comparison-mode-selector select, .theme-selector select {
+        .comparison-mode-selector select, .theme-selector select, .font-selector select {
             background: var(--accents-1);
             color: var(--fg);
             border: 1px solid var(--accents-2);
             border-radius: 4px;
-            padding: 3px 5px;
+            padding: 4px 6px;
             font-size: 11px;
             outline: none;
             -webkit-appearance: none;
@@ -78,7 +87,7 @@
             appearance: none;
             cursor: pointer;
         }
-        .comparison-mode-selector select:focus, .theme-selector select:focus {
+        .comparison-mode-selector select:focus, .theme-selector select:focus, .font-selector select:focus {
             border-color: var(--success);
         }
 
@@ -141,7 +150,7 @@
         }
     </style>
 </head>
-<body>
+<body class="theme-dark font-inter">
     <div id="container">
         <div class="header">
             <div class="logo">
@@ -165,28 +174,23 @@
                     <label for="themeSelect">Theme:</label>
                     <select id="themeSelect">
                         <option value="dark">Dark</option>
-                        <option value="bloomberg">Bloomberg</option>
-                        <option value="terminal">Terminal</option>
+                        <option value="bloomberg">Bloomberg Terminal</option>
                         <option value="light">Light</option>
                         <option value="blue">Blue</option>
                         <option value="purple">Purple</option>
-                        <option value="green">Matrix</option>
-                        <option value="cyberpunk">Cyberpunk</option>
-                        <option value="midnight">Midnight</option>
-                        <option value="retro">Retro</option>
+                        <option value="matrix">Matrix</option>
                         <option value="nord">Nord</option>
-                        <option value="dracula">Dracula</option>
                     </select>
                 </div>
                 <div class="font-selector">
                     <label for="fontSelect">Font:</label>
                     <select id="fontSelect">
                         <option value="inter">Inter</option>
-                        <option value="mono">Courier</option>
-                        <option value="terminal">Terminal</option>
+                        <option value="bloomberg">IBM Plex Mono</option>
+                        <option value="roboto">Roboto Mono</option>
+                        <option value="courier">Courier</option>
+                        <option value="consolas">Consolas</option>
                         <option value="system">System</option>
-                        <option value="ubuntu">Ubuntu Mono</option>
-                        <option value="fira">Fira Code</option>
                     </select>
                 </div>
             </div>
@@ -196,9 +200,12 @@
     <audio id="beep" src="https://actions.google.com/sounds/v1/notifications/beeps_pristine_cut_off.ogg"></audio>
 
     <script>
-        // Theme management
+        // Theme and font management
         const savedTheme = localStorage.getItem('sniperTheme') || 'dark';
-        document.documentElement.setAttribute('data-theme', savedTheme);
+        const savedFont = localStorage.getItem('sniperFont') || 'inter';
+        
+        // Remove all theme and font classes first
+        document.body.className = `theme-${savedTheme} font-${savedFont}`;
         
         const startTime = Date.now();
         setInterval(() => {
@@ -207,24 +214,32 @@
         }, 1000);
 
         let currentComparisonMode = document.getElementById('comparisonMode').value;
-        let currentDeals = new Map(); // Store deals by ID
-        let auctionUUIDs = new Map(); // Map deal ID to full auction UUID
+        let currentDeals = new Map();
+        let auctionUUIDs = new Map();
 
-        // Set theme selector to saved value
+        // Set selectors to saved values
         document.getElementById('themeSelect').value = savedTheme;
+        document.getElementById('fontSelect').value = savedFont;
         
         // Theme change handler
         document.getElementById('themeSelect').addEventListener('change', (event) => {
             const theme = event.target.value;
-            document.documentElement.setAttribute('data-theme', theme);
+            document.body.className = document.body.className.replace(/theme-\w+/, `theme-${theme}`);
             localStorage.setItem('sniperTheme', theme);
+        });
+
+        // Font change handler
+        document.getElementById('fontSelect').addEventListener('change', (event) => {
+            const font = event.target.value;
+            document.body.className = document.body.className.replace(/font-\w+/, `font-${font}`);
+            localStorage.setItem('sniperFont', font);
         });
 
         document.getElementById('comparisonMode').addEventListener('change', (event) => {
             currentComparisonMode = event.target.value;
             currentDeals.clear();
             auctionUUIDs.clear();
-            document.getElementById('deals').innerHTML = ''; // Clear deals on mode change
+            document.getElementById('deals').innerHTML = '';
         });
 
         async function fetchWithRetry(url) {
@@ -273,7 +288,6 @@
         }
 
         function renderDeals() {
-            // Sort deals by discount percentage (highest first)
             const sortedDeals = Array.from(currentDeals.values()).sort((a, b) => {
                 const discountA = currentComparisonMode === 'next_bin' ? a.disc_vs_next_bin : a.disc_vs_avg;
                 const discountB = currentComparisonMode === 'next_bin' ? b.disc_vs_next_bin : b.disc_vs_avg;
@@ -288,18 +302,9 @@
                 div.className = 'card';
                 div.id = d.id;
 
-                let displayedDiscount = '';
-                let referenceNextBin = '';
-                let referenceAvg = '';
-                
-                if (currentComparisonMode === 'next_bin') {
-                    displayedDiscount = d.disc_vs_next_bin;
-                } else if (currentComparisonMode === 'avg') {
-                    displayedDiscount = d.disc_vs_avg;
-                }
-                
-                referenceNextBin = d.next_lowest_bin_price ? d.next_lowest_bin_price.toLocaleString() : 'N/A';
-                referenceAvg = d.avg_price ? d.avg_price.toLocaleString() : 'N/A';
+                let displayedDiscount = currentComparisonMode === 'next_bin' ? d.disc_vs_next_bin : d.disc_vs_avg;
+                let referenceNextBin = d.next_lowest_bin_price ? d.next_lowest_bin_price.toLocaleString() : 'N/A';
+                let referenceAvg = d.avg_price ? d.avg_price.toLocaleString() : 'N/A';
 
                 div.innerHTML = `
                     <div class="card-inner">
@@ -328,33 +333,25 @@
             });
         }
 
-        // Check if auctions are still available
         let lastSuccessfulCheck = Date.now();
         
         async function checkAuctionsAvailability() {
             if (auctionUUIDs.size === 0) return;
 
             try {
-                // Fetch all active auctions from page 0 to get total pages
                 const r0 = await fetch('https://skyblock-483009.uc.r.appspot.com/data?mode=' + currentComparisonMode);
-                if (!r0.ok) return; // Don't process if request failed
+                if (!r0.ok) return;
                 
                 const data0 = await r0.json();
-                
-                // If backend is initializing or has error, don't remove deals
                 if (!data0.deals || data0.status.includes('Initializing') || data0.status.includes('ERROR')) {
                     return;
                 }
                 
                 lastSuccessfulCheck = Date.now();
-                
-                // Get all current auction IDs from the backend
                 const activeAuctionIds = new Set(data0.deals.map(d => d.id));
                 
-                // Check each displayed deal
                 let removedAny = false;
                 for (const [dealId, uuid] of auctionUUIDs.entries()) {
-                    // If the deal is no longer in the backend response, it's been sold
                     if (!activeAuctionIds.has(dealId)) {
                         currentDeals.delete(dealId);
                         auctionUUIDs.delete(dealId);
@@ -367,13 +364,10 @@
                 }
             } catch(e) {
                 console.error("Error checking auction availability:", e);
-                // Don't remove deals on error
             }
         }
 
-        // Only check availability if we've had a successful check recently
         setInterval(() => {
-            // If it's been more than 10 seconds since last successful check, skip
             if (Date.now() - lastSuccessfulCheck < 10000) {
                 checkAuctionsAvailability();
             }
@@ -385,7 +379,6 @@
                 const data = await r.json();
                 document.getElementById('backend-status-text').innerText = data.status;
 
-                // Don't process deals if backend is initializing or has error
                 if (data.status.includes('Initializing') || data.status.includes('ERROR')) {
                     setTimeout(update, 1000);
                     return;
@@ -396,7 +389,6 @@
                 data.deals.forEach(d => {
                     if (!currentDeals.has(d.id)) {
                         currentDeals.set(d.id, d);
-                        // Extract full UUID from the cmd field
                         const uuidMatch = d.cmd.match(/viewauction (.+)/);
                         if (uuidMatch) {
                             auctionUUIDs.set(d.id, uuidMatch[1]);
@@ -404,7 +396,6 @@
                         needsRerender = true;
                         document.getElementById('beep').play().catch(()=> {});
                         
-                        // Set expiration timer
                         setTimeout(() => {
                             if(currentDeals.has(d.id)) {
                                 currentDeals.delete(d.id);
