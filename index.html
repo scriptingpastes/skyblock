@@ -103,6 +103,11 @@
             animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             display: flex;
             flex-direction: column;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        .card.removing {
+            opacity: 0;
+            transform: scale(0.95);
         }
         @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }        
 
@@ -290,6 +295,12 @@
                         <option value="system">System</option>
                     </select>
                 </div>
+                <div class="comparison-mode-selector">
+                    <label for="duplicatesToggle" style="cursor: pointer;">
+                        <input type="checkbox" id="duplicatesToggle" style="margin-right: 3px; cursor: pointer;">
+                        Show Duplicates
+                    </label>
+                </div>
             </div>
         </div>
         <div id="deals" class="deals-grid"></div>
@@ -333,10 +344,17 @@
         let currentComparisonMode = document.getElementById('comparisonMode').value;
         let currentDeals = new Map();
         let auctionUUIDs = new Map();
+        let showDuplicates = false;
+        let dealTimers = new Map(); // Track timers for each deal
 
         // Set selectors to saved values
         document.getElementById('themeSelect').value = savedTheme;
         document.getElementById('fontSelect').value = savedFont;
+        
+        // Duplicates toggle handler
+        document.getElementById('duplicatesToggle').addEventListener('change', (event) => {
+            showDuplicates = event.target.checked;
+        });
         
         // Theme change handler
         document.getElementById('themeSelect').addEventListener('change', (event) => {
@@ -354,6 +372,9 @@
 
         document.getElementById('comparisonMode').addEventListener('change', (event) => {
             currentComparisonMode = event.target.value;
+            // Clear all timers
+            dealTimers.forEach(timer => clearTimeout(timer));
+            dealTimers.clear();
             currentDeals.clear();
             auctionUUIDs.clear();
             document.getElementById('deals').innerHTML = '';
@@ -565,7 +586,7 @@
             sortedDeals.forEach(d => {
                 const div = document.createElement('div');
                 div.className = 'card';
-                div.id = d.id;
+                div.id = d.displayId || d.id;
 
                 let displayedDiscount = currentComparisonMode === 'next_bin' ? d.disc_vs_next_bin : d.disc_vs_avg;
                 let referenceNextBin = d.next_lowest_bin_price ? d.next_lowest_bin_price.toLocaleString() : 'N/A';
@@ -578,7 +599,7 @@
                                 <div class="item-label">Market Listing</div>
                                 <div class="item-name">${d.name}</div>
                             </div>
-                            <div id="c-${d.id}" class="chart-container"><div class="chart-loading">LOADING...</div></div>
+                            <div id="c-${d.displayId || d.id}" class="chart-container"><div class="chart-loading">LOADING...</div></div>
                         </div>
                         <div class="price-section">
                             <div class="price-main">${d.price.toLocaleString()}</div>
@@ -590,11 +611,17 @@
                         </div>
                     </div>
                     <div class="timer-container"><div class="timer-bar"></div></div>
-                    <button class="btn" onclick="cp('${d.cmd}','${d.id}')">Copy /viewauction</button>
+                    <button class="btn" onclick="cp('${d.cmd}','${d.displayId || d.id}')">Copy /viewauction</button>
                 `;
                 
                 dealsContainer.appendChild(div);
-                loadChart(d.tag, "c-"+d.id);
+                loadChart(d.tag, "c-" + (d.displayId || d.id));
+            });
+        }
+
+        function cp(cmd, id) {
+            navigator.clipboard.writeText("/" + cmd).then(() => {
+                removeDealGracefully(id);
             });
         }
 
@@ -652,22 +679,28 @@
                 let needsRerender = false;
 
                 data.deals.forEach(d => {
-                    if (!currentDeals.has(d.id)) {
-                        currentDeals.set(d.id, d);
+                    // If duplicates allowed, create unique ID with timestamp
+                    const dealKey = showDuplicates ? `${d.id}_${d.timestamp}` : d.id;
+                    
+                    if (!currentDeals.has(dealKey)) {
+                        // Store with modified key
+                        const dealData = { ...d, displayId: dealKey, originalId: d.id };
+                        currentDeals.set(dealKey, dealData);
+                        
                         const uuidMatch = d.cmd.match(/viewauction (.+)/);
                         if (uuidMatch) {
-                            auctionUUIDs.set(d.id, uuidMatch[1]);
+                            auctionUUIDs.set(dealKey, uuidMatch[1]);
                         }
                         needsRerender = true;
                         document.getElementById('beep').play().catch(()=> {});
                         
-                        setTimeout(() => {
-                            if(currentDeals.has(d.id)) {
-                                currentDeals.delete(d.id);
-                                auctionUUIDs.delete(d.id);
-                                renderDeals();
+                        // Set expiration timer with graceful removal
+                        const timerId = setTimeout(() => {
+                            if(currentDeals.has(dealKey)) {
+                                removeDealGracefully(dealKey);
                             }
                         }, 45000);
+                        dealTimers.set(dealKey, timerId);
                     }
                 });
 
@@ -678,14 +711,6 @@
                 console.error("Error in update function:", e);
             }
             setTimeout(update, 1000);
-        }
-
-        function cp(cmd, id) {
-            navigator.clipboard.writeText("/" + cmd).then(() => {
-                currentDeals.delete(id);
-                auctionUUIDs.delete(id);
-                renderDeals();
-            });
         }
         update();
     </script>
