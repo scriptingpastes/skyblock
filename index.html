@@ -373,11 +373,16 @@
         async function loadChart(tag, chartId) {
             const container = document.getElementById(chartId);
             try {
-                const url = `https://sky.coflnet.com/api/item/price/${tag}/history/week`;
-                let raw = await fetchWithRetry(url);
-                if (!raw || raw.length < 2) { container.innerHTML = '<div class="chart-loading">NO HISTORY</div>'; return; }
+                const url = `https://skyblock-483009.uc.r.appspot.com/api/price_history/${tag}?timeframe=week`;
+                const r = await fetch(url);
+                const response = await r.json();
+                
+                if (!response.success || !response.data || response.data.length < 2) {
+                    container.innerHTML = '<div class="chart-loading">NO HISTORY</div>';
+                    return;
+                }
 
-                let prices = raw.map(d => d.avg);
+                let prices = response.data.map(d => d.price);
                 const sortedPrices = [...prices].sort((a, b) => a - b);
                 const median = sortedPrices[Math.floor(sortedPrices.length / 2)];
                 prices = prices.filter(p => p <= median * 5 && p >= median / 5);
@@ -405,7 +410,10 @@
                 // Add click handler to open modal
                 container.style.cursor = 'pointer';
                 container.onclick = () => openChartModal(tag);
-            } catch (e) { container.innerHTML = '<div class="chart-loading">STABLE</div>'; }
+            } catch (e) {
+                console.error('Chart error:', e);
+                container.innerHTML = '<div class="chart-loading">STABLE</div>';
+            }
         }
 
         // Chart modal state
@@ -437,63 +445,49 @@
             container.innerHTML = '<div class="chart-loading">Loading chart...</div>';
             
             try {
-                const timeframeMap = {
-                    'day': 'day',
-                    'week': 'week',
-                    'month': 'month',
-                    'all': 'full'
-                };
+                const url = `https://skyblock-483009.uc.r.appspot.com/api/price_history/${currentChartTag}?timeframe=${currentTimeframe}`;
+                const r = await fetch(url);
+                const response = await r.json();
                 
-                const url = `https://sky.coflnet.com/api/item/price/${currentChartTag}/history/${timeframeMap[currentTimeframe]}`;
-                let raw = await fetchWithRetry(url);
-                
-                if (!raw || raw.length < 2) {
+                if (!response.success || !response.data || response.data.length < 2) {
                     container.innerHTML = '<div class="chart-loading">NO HISTORY</div>';
                     return;
                 }
 
-                // Process data for candlestick chart
-                let data = raw.map(d => ({
-                    time: d.time || Date.now(),
-                    open: d.min || d.avg,
-                    high: d.max || d.avg,
-                    low: d.min || d.avg,
-                    close: d.avg,
-                    volume: d.volume || 0
+                // Convert to chart format
+                let data = response.data.map(d => ({
+                    price: d.price,
+                    time: d.timestamp
                 }));
 
                 // Filter outliers
-                const prices = data.map(d => d.close);
+                const prices = data.map(d => d.price);
                 const sortedPrices = [...prices].sort((a, b) => a - b);
                 const median = sortedPrices[Math.floor(sortedPrices.length / 2)];
-                data = data.filter(d => d.close <= median * 5 && d.close >= median / 5);
+                data = data.filter(d => d.price <= median * 5 && d.price >= median / 5);
 
                 if (data.length === 0) {
                     container.innerHTML = '<div class="chart-loading">NO VALID DATA</div>';
                     return;
                 }
 
-                renderCandlestickChart(container, data);
+                renderPriceChart(container, data);
             } catch (e) {
                 console.error('Chart error:', e);
                 container.innerHTML = '<div class="chart-loading">ERROR LOADING</div>';
             }
         }
 
-        function renderCandlestickChart(container, data) {
+        function renderPriceChart(container, data) {
             const width = container.clientWidth - 80;
             const height = 400;
-            const padding = { top: 20, right: 60, bottom: 40, left: 60 };
+            const padding = { top: 30, right: 60, bottom: 40, left: 60 };
             
             // Calculate price range
-            const allPrices = data.flatMap(d => [d.high, d.low]);
-            const maxPrice = Math.max(...allPrices);
-            const minPrice = Math.min(...allPrices);
+            const prices = data.map(d => d.price);
+            const maxPrice = Math.max(...prices);
+            const minPrice = Math.min(...prices);
             const priceRange = maxPrice - minPrice || 1;
-            
-            // Calculate candle width
-            const candleWidth = Math.max(2, Math.min(20, (width - padding.left - padding.right) / data.length - 2));
-            const spacing = (width - padding.left - padding.right) / data.length;
             
             let svg = `<svg width="${width + 80}" height="${height}" style="overflow:visible">`;
             
@@ -502,39 +496,50 @@
                 const y = padding.top + (height - padding.top - padding.bottom) * i / 5;
                 const price = maxPrice - (priceRange * i / 5);
                 svg += `<line x1="${padding.left}" y1="${y}" x2="${width + padding.left}" y2="${y}" stroke="#333" stroke-dasharray="4" stroke-width="1" />`;
-                svg += `<text x="${width + padding.left + 5}" y="${y + 4}" class="axis-label" fill="#888">${price.toLocaleString()}</text>`;
+                svg += `<text x="${width + padding.left + 5}" y="${y + 4}" class="axis-label" fill="#888">${Math.round(price).toLocaleString()}</text>`;
             }
             
-            // Candlesticks
-            data.forEach((candle, i) => {
-                const x = padding.left + i * spacing + spacing / 2;
-                const openY = padding.top + (height - padding.top - padding.bottom) * (1 - (candle.open - minPrice) / priceRange);
-                const closeY = padding.top + (height - padding.top - padding.bottom) * (1 - (candle.close - minPrice) / priceRange);
-                const highY = padding.top + (height - padding.top - padding.bottom) * (1 - (candle.high - minPrice) / priceRange);
-                const lowY = padding.top + (height - padding.top - padding.bottom) * (1 - (candle.low - minPrice) / priceRange);
+            // Plot area dimensions
+            const plotWidth = width - padding.left;
+            const plotHeight = height - padding.top - padding.bottom;
+            
+            // Create line path connecting all points
+            let linePath = "";
+            data.forEach((point, i) => {
+                const x = padding.left + (i / (data.length - 1)) * plotWidth;
+                const y = padding.top + plotHeight * (1 - (point.price - minPrice) / priceRange);
+                linePath += (i === 0 ? "M" : "L") + ` ${x} ${y}`;
+            });
+            
+            // Draw line
+            svg += `<path d="${linePath}" fill="none" stroke="#0070f3" stroke-width="3" />`;
+            
+            // Draw points
+            data.forEach((point, i) => {
+                const x = padding.left + (i / (data.length - 1)) * plotWidth;
+                const y = padding.top + plotHeight * (1 - (point.price - minPrice) / priceRange);
                 
-                const isGreen = candle.close >= candle.open;
-                const color = isGreen ? '#4af6c3' : '#ff4444';
-                const bodyTop = Math.min(openY, closeY);
-                const bodyHeight = Math.max(2, Math.abs(closeY - openY));
+                // Determine color based on position
+                const pricePosition = (point.price - minPrice) / priceRange;
+                const color = pricePosition > 0.5 ? '#4af6c3' : '#ff6b6b';
                 
-                // Wick
-                svg += `<line x1="${x}" y1="${highY}" x2="${x}" y2="${lowY}" stroke="${color}" stroke-width="1" />`;
-                
-                // Body
-                svg += `<rect x="${x - candleWidth/2}" y="${bodyTop}" width="${candleWidth}" height="${bodyHeight}" fill="${color}" />`;
+                // Draw point
+                svg += `<circle cx="${x}" cy="${y}" r="4" fill="${color}" stroke="#000" stroke-width="1" />`;
             });
             
             // Time labels
-            const timeLabels = [0, Math.floor(data.length / 4), Math.floor(data.length / 2), Math.floor(data.length * 3 / 4), data.length - 1];
-            timeLabels.forEach(i => {
-                if (i < data.length) {
-                    const x = padding.left + i * spacing;
-                    const date = new Date(data[i].time);
-                    const label = `${date.getMonth() + 1}/${date.getDate()}`;
-                    svg += `<text x="${x}" y="${height - 10}" class="axis-label" text-anchor="middle">${label}</text>`;
-                }
-            });
+            const numLabels = Math.min(6, data.length);
+            for (let i = 0; i < numLabels; i++) {
+                const dataIndex = Math.floor((data.length - 1) * i / (numLabels - 1));
+                const x = padding.left + (dataIndex / (data.length - 1)) * plotWidth;
+                const date = new Date(data[dataIndex].time);
+                const label = `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
+                svg += `<text x="${x}" y="${height - 10}" class="axis-label" text-anchor="middle" font-size="9">${label}</text>`;
+            }
+            
+            // Title and legend
+            svg += `<text x="${padding.left}" y="15" class="axis-label" fill="#0070f3" font-weight="bold">Sold Auction Prices (Your Database)</text>`;
+            svg += `<text x="${width + padding.left}" y="15" class="axis-label" fill="#888" text-anchor="end">${data.length} sales</text>`;
             
             svg += '</svg>';
             container.innerHTML = svg;
