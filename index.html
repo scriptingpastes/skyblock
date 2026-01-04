@@ -249,18 +249,24 @@
         }
 
         // Check if auctions are still available
+        let lastSuccessfulCheck = Date.now();
+        
         async function checkAuctionsAvailability() {
             if (auctionUUIDs.size === 0) return;
 
             try {
                 // Fetch all active auctions from page 0 to get total pages
                 const r0 = await fetch('https://skyblock-483009.uc.r.appspot.com/data?mode=' + currentComparisonMode);
+                if (!r0.ok) return; // Don't process if request failed
+                
                 const data0 = await r0.json();
                 
                 // If backend is initializing or has error, don't remove deals
                 if (!data0.deals || data0.status.includes('Initializing') || data0.status.includes('ERROR')) {
                     return;
                 }
+                
+                lastSuccessfulCheck = Date.now();
                 
                 // Get all current auction IDs from the backend
                 const activeAuctionIds = new Set(data0.deals.map(d => d.id));
@@ -285,8 +291,13 @@
             }
         }
 
-        // Check availability every second
-        setInterval(checkAuctionsAvailability, 1000);
+        // Only check availability if we've had a successful check recently
+        setInterval(() => {
+            // If it's been more than 10 seconds since last successful check, skip
+            if (Date.now() - lastSuccessfulCheck < 10000) {
+                checkAuctionsAvailability();
+            }
+        }, 1000);
 
         async function update() {
             try {
