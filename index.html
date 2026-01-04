@@ -9,7 +9,38 @@
             --fg: #fff; --accents-8: #888; --success: #00ff41;
             --font: 'Inter', -apple-system, system-ui, sans-serif;
         }
-        body { background: var(--bg); color: var(--fg); font-family: var(--font); margin: 0; padding: 20px 10px; }
+        
+        /* Theme definitions */
+        [data-theme="dark"] {
+            --bg: #000; --accents-1: #111; --accents-2: #333;
+            --fg: #fff; --accents-8: #888; --success: #00ff41;
+        }
+        [data-theme="light"] {
+            --bg: #ffffff; --accents-1: #f5f5f5; --accents-2: #e0e0e0;
+            --fg: #000; --accents-8: #666; --success: #00c853;
+        }
+        [data-theme="blue"] {
+            --bg: #0a1628; --accents-1: #152238; --accents-2: #1e3a5f;
+            --fg: #e0f2fe; --accents-8: #94a3b8; --success: #38bdf8;
+        }
+        [data-theme="purple"] {
+            --bg: #1a0b2e; --accents-1: #2d1b4e; --accents-2: #4c3575;
+            --fg: #f0e6ff; --accents-8: #a78bfa; --success: #c084fc;
+        }
+        [data-theme="green"] {
+            --bg: #0a1f0a; --accents-1: #162d16; --accents-2: #1e4620;
+            --fg: #e6ffe6; --accents-8: #86efac; --success: #4ade80;
+        }
+        [data-theme="cyberpunk"] {
+            --bg: #0d0221; --accents-1: #1b0f3a; --accents-2: #2d1b69;
+            --fg: #ff006e; --accents-8: #8338ec; --success: #ffbe0b;
+        }
+        [data-theme="midnight"] {
+            --bg: #0f172a; --accents-1: #1e293b; --accents-2: #334155;
+            --fg: #f1f5f9; --accents-8: #94a3b8; --success: #06b6d4;
+        }
+        
+        body { background: var(--bg); color: var(--fg); font-family: var(--font); margin: 0; padding: 20px 10px; transition: background 0.3s ease, color 0.3s ease; }
         #container { max-width: 1400px; margin: auto; }
 
         .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; flex-wrap: wrap;}
@@ -18,16 +49,23 @@
         .status { font-size: 12px; color: var(--accents-8); display: flex; align-items: center; margin-top: 5px; gap: 15px; flex-wrap: wrap; }
         .status-dot { width: 6px; height: 6px; background: var(--success); border-radius: 50%; margin-right: 8px; box-shadow: 0 0 8px var(--success); }
 
-        .comparison-mode-selector {
+        .controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .comparison-mode-selector, .theme-selector {
             font-size: 11px;
             color: var(--accents-8);
             display: flex;
             align-items: center;
         }
-        .comparison-mode-selector label {
+        .comparison-mode-selector label, .theme-selector label {
             margin-right: 5px;
         }
-        .comparison-mode-selector select {
+        .comparison-mode-selector select, .theme-selector select {
             background: var(--accents-1);
             color: var(--fg);
             border: 1px solid var(--accents-2);
@@ -40,8 +78,8 @@
             appearance: none;
             cursor: pointer;
         }
-        .comparison-mode-selector select:focus {
-            border-color: #0070f3;
+        .comparison-mode-selector select:focus, .theme-selector select:focus {
+            border-color: var(--success);
         }
 
         .deals-grid {
@@ -62,10 +100,10 @@
         .card-inner { padding: 16px; flex: 1; }
         .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 10px; }
         .item-name { font-size: 14px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.3; }
-        .item-label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+        .item-label { font-size: 10px; color: var(--accents-8); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
 
-        .chart-container { height: 60px; width: 120px; background: #050505; border-radius: 4px; border: 1px solid var(--accents-1); position: relative; flex-shrink: 0; }
-        .chart-loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 9px; color: var(--accents-2); }
+        .chart-container { height: 60px; width: 120px; background: var(--accents-1); border-radius: 4px; border: 1px solid var(--accents-2); position: relative; flex-shrink: 0; }
+        .chart-loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 9px; color: var(--accents-8); }
 
         .price-section { display: flex; align-items: baseline; gap: 8px; margin-top: 8px; }
         .price-main { font-size: 18px; font-weight: 800; }
@@ -84,7 +122,7 @@
 
         .timer-container { width: 100%; height: 1px; background: var(--accents-1); position: relative; }
         .timer-bar {
-            height: 100%; background: #fff; width: 100%;
+            height: 100%; background: var(--fg); width: 100%;
             transform-origin: left; animation: shrink 45s linear forwards;
         }
         @keyframes shrink { from { transform: scaleX(1); } to { transform: scaleX(0); } }        
