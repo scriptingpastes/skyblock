@@ -346,6 +346,7 @@
         let auctionUUIDs = new Map();
         let showDuplicates = false;
         let dealTimers = new Map(); // Track timers for each deal
+        let seenTags = new Set(); // Track which item tags we've already shown
 
         // Set selectors to saved values
         document.getElementById('themeSelect').value = savedTheme;
@@ -354,6 +355,18 @@
         // Duplicates toggle handler
         document.getElementById('duplicatesToggle').addEventListener('change', (event) => {
             showDuplicates = event.target.checked;
+            if (!showDuplicates) {
+                // When turning off duplicates, clear and rebuild from scratch
+                seenTags.clear();
+                dealTimers.forEach(timer => clearTimeout(timer));
+                dealTimers.clear();
+                currentDeals.clear();
+                auctionUUIDs.clear();
+                document.getElementById('deals').innerHTML = '';
+            } else {
+                // When turning on duplicates, just clear the seen tags tracker
+                seenTags.clear();
+            }
         });
         
         // Theme change handler
@@ -372,11 +385,12 @@
 
         document.getElementById('comparisonMode').addEventListener('change', (event) => {
             currentComparisonMode = event.target.value;
-            // Clear all timers
+            // Clear all timers and state
             dealTimers.forEach(timer => clearTimeout(timer));
             dealTimers.clear();
             currentDeals.clear();
             auctionUUIDs.clear();
+            seenTags.clear();
             document.getElementById('deals').innerHTML = '';
         });
 
@@ -679,13 +693,17 @@
                 let needsRerender = false;
 
                 data.deals.forEach(d => {
-                    // If duplicates allowed, create unique ID with timestamp
-                    const dealKey = showDuplicates ? `${d.id}_${d.timestamp}` : d.id;
+                    const dealKey = d.id;
                     
-                    if (!currentDeals.has(dealKey)) {
+                    // Check if this tag has already been shown (for duplicate filtering)
+                    const isDuplicate = seenTags.has(d.tag);
+                    
+                    // Only add if: (show duplicates is on) OR (not a duplicate)
+                    if (!currentDeals.has(dealKey) && (showDuplicates || !isDuplicate)) {
                         // Store with modified key
                         const dealData = { ...d, displayId: dealKey, originalId: d.id };
                         currentDeals.set(dealKey, dealData);
+                        seenTags.add(d.tag); // Mark this tag as seen
                         
                         const uuidMatch = d.cmd.match(/viewauction (.+)/);
                         if (uuidMatch) {
@@ -697,10 +715,13 @@
                         // Set expiration timer with graceful removal
                         const timerId = setTimeout(() => {
                             if(currentDeals.has(dealKey)) {
+                                console.log('Deal expired (timer):', dealData.name, dealKey);
                                 removeDealGracefully(dealKey);
                             }
                         }, 45000);
                         dealTimers.set(dealKey, timerId);
+                        
+                        console.log('Deal added:', dealData.name, dealKey, 'Timer set for 45s');
                     }
                 });
 
