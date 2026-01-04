@@ -138,10 +138,12 @@
 
         let currentComparisonMode = document.getElementById('comparisonMode').value;
         let currentDeals = new Map(); // Store deals by ID
+        let auctionUUIDs = new Map(); // Map deal ID to full auction UUID
 
         document.getElementById('comparisonMode').addEventListener('change', (event) => {
             currentComparisonMode = event.target.value;
             currentDeals.clear();
+            auctionUUIDs.clear();
             document.getElementById('deals').innerHTML = ''; // Clear deals on mode change
         });
 
@@ -246,6 +248,40 @@
             });
         }
 
+        // Check if auctions are still available
+        async function checkAuctionsAvailability() {
+            if (auctionUUIDs.size === 0) return;
+
+            try {
+                // Fetch all active auctions from page 0 to get total pages
+                const r0 = await fetch('https://skyblock-483009.uc.r.appspot.com/data?mode=' + currentComparisonMode);
+                const data0 = await r0.json();
+                
+                // Get all current auction IDs from the backend
+                const activeAuctionIds = new Set(data0.deals.map(d => d.id));
+                
+                // Check each displayed deal
+                let removedAny = false;
+                for (const [dealId, uuid] of auctionUUIDs.entries()) {
+                    // If the deal is no longer in the backend response, it's been sold
+                    if (!activeAuctionIds.has(dealId)) {
+                        currentDeals.delete(dealId);
+                        auctionUUIDs.delete(dealId);
+                        removedAny = true;
+                    }
+                }
+                
+                if (removedAny) {
+                    renderDeals();
+                }
+            } catch(e) {
+                console.error("Error checking auction availability:", e);
+            }
+        }
+
+        // Check availability every second
+        setInterval(checkAuctionsAvailability, 1000);
+
         async function update() {
             try {
                 const r = await fetch(`https://skyblock-483009.uc.r.appspot.com/data?mode=${currentComparisonMode}`);
@@ -257,6 +293,11 @@
                 data.deals.forEach(d => {
                     if (!currentDeals.has(d.id)) {
                         currentDeals.set(d.id, d);
+                        // Extract full UUID from the cmd field
+                        const uuidMatch = d.cmd.match(/viewauction (.+)/);
+                        if (uuidMatch) {
+                            auctionUUIDs.set(d.id, uuidMatch[1]);
+                        }
                         needsRerender = true;
                         document.getElementById('beep').play().catch(()=> {});
                         
@@ -264,6 +305,7 @@
                         setTimeout(() => {
                             if(currentDeals.has(d.id)) {
                                 currentDeals.delete(d.id);
+                                auctionUUIDs.delete(d.id);
                                 renderDeals();
                             }
                         }, 45000);
@@ -282,6 +324,7 @@
         function cp(cmd, id) {
             navigator.clipboard.writeText("/" + cmd).then(() => {
                 currentDeals.delete(id);
+                auctionUUIDs.delete(id);
                 renderDeals();
             });
         }
