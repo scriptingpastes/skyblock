@@ -145,7 +145,7 @@
     <div id="container">
         <div class="header">
             <div class="logo">
-                <svg width="24" height="24" viewBox="0 0 76 65" fill="#fff"><path d="M37.5 0L75 65H0L37.5 0Z"/></svg>
+                <svg width="24" height="24" viewBox="0 0 76 65" fill="currentColor"><path d="M37.5 0L75 65H0L37.5 0Z"/></svg>
                 SNIPER V2
             </div>
             <div class="status">
@@ -155,10 +155,22 @@
                 </div>
                 <span id="backend-status-text">Initializing...</span>
                 <div class="comparison-mode-selector">
-                    <label for="comparisonMode">Compare to:</label>
+                    <label for="comparisonMode">Compare:</label>
                     <select id="comparisonMode">
-                        <option value="next_bin" selected>Next Lowest BIN</option>
+                        <option value="next_bin" selected>Next BIN</option>
                         <option value="avg">7-Day Avg</option>
+                    </select>
+                </div>
+                <div class="theme-selector">
+                    <label for="themeSelect">Theme:</label>
+                    <select id="themeSelect">
+                        <option value="dark" selected>Dark</option>
+                        <option value="light">Light</option>
+                        <option value="blue">Blue</option>
+                        <option value="purple">Purple</option>
+                        <option value="green">Matrix</option>
+                        <option value="cyberpunk">Cyberpunk</option>
+                        <option value="midnight">Midnight</option>
                     </select>
                 </div>
             </div>
@@ -168,6 +180,10 @@
     <audio id="beep" src="https://actions.google.com/sounds/v1/notifications/beeps_pristine_cut_off.ogg"></audio>
 
     <script>
+        // Theme management
+        const savedTheme = localStorage.getItem('sniperTheme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        
         const startTime = Date.now();
         setInterval(() => {
             const diff = Math.floor((Date.now() - startTime) / 1000);
@@ -177,6 +193,16 @@
         let currentComparisonMode = document.getElementById('comparisonMode').value;
         let currentDeals = new Map(); // Store deals by ID
         let auctionUUIDs = new Map(); // Map deal ID to full auction UUID
+
+        // Set theme selector to saved value
+        document.getElementById('themeSelect').value = savedTheme;
+        
+        // Theme change handler
+        document.getElementById('themeSelect').addEventListener('change', (event) => {
+            const theme = event.target.value;
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('sniperTheme', theme);
+        });
 
         document.getElementById('comparisonMode').addEventListener('change', (event) => {
             currentComparisonMode = event.target.value;
