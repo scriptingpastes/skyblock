@@ -257,6 +257,11 @@
                 const r0 = await fetch('https://skyblock-483009.uc.r.appspot.com/data?mode=' + currentComparisonMode);
                 const data0 = await r0.json();
                 
+                // If backend is initializing or has error, don't remove deals
+                if (!data0.deals || data0.status.includes('Initializing') || data0.status.includes('ERROR')) {
+                    return;
+                }
+                
                 // Get all current auction IDs from the backend
                 const activeAuctionIds = new Set(data0.deals.map(d => d.id));
                 
@@ -276,6 +281,7 @@
                 }
             } catch(e) {
                 console.error("Error checking auction availability:", e);
+                // Don't remove deals on error
             }
         }
 
@@ -287,6 +293,12 @@
                 const r = await fetch(`https://skyblock-483009.uc.r.appspot.com/data?mode=${currentComparisonMode}`);
                 const data = await r.json();
                 document.getElementById('backend-status-text').innerText = data.status;
+
+                // Don't process deals if backend is initializing or has error
+                if (data.status.includes('Initializing') || data.status.includes('ERROR')) {
+                    setTimeout(update, 1000);
+                    return;
+                }
 
                 let needsRerender = false;
 
