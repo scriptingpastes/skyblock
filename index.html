@@ -397,6 +397,27 @@
             document.getElementById('deals').innerHTML = '';
         });
 
+        // NEW: Graceful removal function (this was missing!)
+        function removeDealGracefully(id) {
+            const card = document.getElementById(id);
+            if (card) {
+                card.classList.add('removing');
+                setTimeout(() => {
+                    if (card.parentNode) {
+                        card.parentNode.removeChild(card);
+                    }
+                    currentDeals.delete(id);
+                    auctionUUIDs.delete(id);
+                    dealTimers.delete(id);
+                }, 500); // matches CSS transition duration
+            } else {
+                // Card already gone from DOM
+                currentDeals.delete(id);
+                auctionUUIDs.delete(id);
+                dealTimers.delete(id);
+            }
+        }
+
         async function fetchWithRetry(url) {
             const proxies = [`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`, `https://corsproxy.io/?${encodeURIComponent(url)}` ];
             for (let proxy of proxies) {
@@ -445,7 +466,6 @@
                     </svg>
                 `;
                 
-                // Add click handler to open modal
                 container.style.cursor = 'pointer';
                 container.onclick = () => openChartModal(tag);
             } catch (e) {
@@ -472,7 +492,6 @@
 
         function changeChartTimeframe(timeframe) {
             currentTimeframe = timeframe;
-            // Update active button
             document.querySelectorAll('.chart-timeframe-btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
             loadLargeChart();
@@ -492,13 +511,11 @@
                     return;
                 }
 
-                // Convert to chart format
                 let data = response.data.map(d => ({
                     price: d.price,
                     time: d.timestamp
                 }));
 
-                // Filter outliers
                 const prices = data.map(d => d.price);
                 const sortedPrices = [...prices].sort((a, b) => a - b);
                 const median = sortedPrices[Math.floor(sortedPrices.length / 2)];
@@ -521,7 +538,6 @@
             const height = 400;
             const padding = { top: 30, right: 60, bottom: 40, left: 60 };
             
-            // Calculate price range
             const prices = data.map(d => d.price);
             const maxPrice = Math.max(...prices);
             const minPrice = Math.min(...prices);
@@ -529,7 +545,6 @@
             
             let svg = `<svg width="${width + 80}" height="${height}" style="overflow:visible">`;
             
-            // Grid lines
             for (let i = 0; i <= 5; i++) {
                 const y = padding.top + (height - padding.top - padding.bottom) * i / 5;
                 const price = maxPrice - (priceRange * i / 5);
@@ -537,11 +552,9 @@
                 svg += `<text x="${width + padding.left + 5}" y="${y + 4}" class="axis-label" fill="#888">${Math.round(price).toLocaleString()}</text>`;
             }
             
-            // Plot area dimensions
             const plotWidth = width - padding.left;
             const plotHeight = height - padding.top - padding.bottom;
             
-            // Create line path connecting all points
             let linePath = "";
             data.forEach((point, i) => {
                 const x = padding.left + (i / (data.length - 1)) * plotWidth;
@@ -549,23 +562,16 @@
                 linePath += (i === 0 ? "M" : "L") + ` ${x} ${y}`;
             });
             
-            // Draw line
             svg += `<path d="${linePath}" fill="none" stroke="#0070f3" stroke-width="3" />`;
             
-            // Draw points
             data.forEach((point, i) => {
                 const x = padding.left + (i / (data.length - 1)) * plotWidth;
                 const y = padding.top + plotHeight * (1 - (point.price - minPrice) / priceRange);
-                
-                // Determine color based on position
                 const pricePosition = (point.price - minPrice) / priceRange;
                 const color = pricePosition > 0.5 ? '#4af6c3' : '#ff6b6b';
-                
-                // Draw point
                 svg += `<circle cx="${x}" cy="${y}" r="4" fill="${color}" stroke="#000" stroke-width="1" />`;
             });
             
-            // Time labels
             const numLabels = Math.min(6, data.length);
             for (let i = 0; i < numLabels; i++) {
                 const dataIndex = Math.floor((data.length - 1) * i / (numLabels - 1));
@@ -575,7 +581,6 @@
                 svg += `<text x="${x}" y="${height - 10}" class="axis-label" text-anchor="middle" font-size="9">${label}</text>`;
             }
             
-            // Title and legend
             svg += `<text x="${padding.left}" y="15" class="axis-label" fill="#0070f3" font-weight="bold">Sold Auction Prices (Your Database)</text>`;
             svg += `<text x="${width + padding.left}" y="15" class="axis-label" fill="#888" text-anchor="end">${data.length} sales</text>`;
             
@@ -583,7 +588,6 @@
             container.innerHTML = svg;
         }
 
-        // Close modal on background click
         document.addEventListener('click', (e) => {
             if (e.target.id === 'chartModal') {
                 closeChartModal();
@@ -636,9 +640,17 @@
             });
         }
 
+        // IMPROVED cp() - now cancels timer and cleans up properly
         function cp(cmd, id) {
             navigator.clipboard.writeText("/" + cmd).then(() => {
-                dismissedDeals.add(id); // Mark as dismissed
+                dismissedDeals.add(id);
+
+                // Cancel any pending expiration timer
+                if (dealTimers.has(id)) {
+                    clearTimeout(dealTimers.get(id));
+                    dealTimers.delete(id);
+                }
+
                 removeDealGracefully(id);
             });
         }
@@ -663,8 +675,15 @@
                 let removedAny = false;
                 for (const [dealId, uuid] of auctionUUIDs.entries()) {
                     if (!activeAuctionIds.has(dealId)) {
+                        // Cancel timer if still pending
+                        if (dealTimers.has(dealId)) {
+                            clearTimeout(dealTimers.get(dealId));
+                            dealTimers.delete(dealId);
+                        }
                         currentDeals.delete(dealId);
                         auctionUUIDs.delete(dealId);
+                        dismissedDeals.add(dealId);
+                        removeDealGracefully(dealId);
                         removedAny = true;
                     }
                 }
@@ -696,10 +715,8 @@
 
                 let needsRerender = false;
                 
-                // Get current backend deal IDs
                 const backendDealIds = new Set(data.deals.map(d => d.id));
                 
-                // Clean up dismissedDeals - remove any that are no longer in backend
                 for (const dismissedId of dismissedDeals) {
                     if (!backendDealIds.has(dismissedId)) {
                         dismissedDeals.delete(dismissedId);
@@ -709,20 +726,16 @@
                 data.deals.forEach(d => {
                     const dealKey = d.id;
                     
-                    // Skip if we've already dismissed this deal
                     if (dismissedDeals.has(dealKey)) {
                         return;
                     }
                     
-                    // Check if this tag has already been shown (for duplicate filtering)
                     const isDuplicate = seenTags.has(d.tag);
                     
-                    // Only add if: (show duplicates is on) OR (not a duplicate)
                     if (!currentDeals.has(dealKey) && (showDuplicates || !isDuplicate)) {
-                        // Store with modified key
                         const dealData = { ...d, displayId: dealKey, originalId: d.id };
                         currentDeals.set(dealKey, dealData);
-                        seenTags.add(d.tag); // Mark this tag as seen
+                        seenTags.add(d.tag);
                         
                         const uuidMatch = d.cmd.match(/viewauction (.+)/);
                         if (uuidMatch) {
@@ -731,22 +744,14 @@
                         needsRerender = true;
                         document.getElementById('beep').play().catch(()=> {});
                         
-                        // Set expiration timer with graceful removal
-                        const dealAddedTime = Date.now();
+                        // Set 45-second expiration timer
                         const timerId = setTimeout(() => {
-                            const elapsed = Date.now() - dealAddedTime;
-                            console.log('Timer callback fired!', dealKey, 'after', elapsed, 'ms');
-                            if(currentDeals.has(dealKey)) {
-                                console.log('Deal expired (timer):', dealData.name, dealKey);
-                                dismissedDeals.add(dealKey); // Mark as dismissed so it won't re-appear
+                            if (currentDeals.has(dealKey)) {
+                                dismissedDeals.add(dealKey);
                                 removeDealGracefully(dealKey);
-                            } else {
-                                console.log('Deal already removed:', dealKey);
                             }
                         }, 45000);
                         dealTimers.set(dealKey, timerId);
-                        
-                        console.log('Deal added:', dealData.name, dealKey, 'Timer ID:', timerId, 'set for 45s at', new Date().toISOString());
                     }
                 });
 
