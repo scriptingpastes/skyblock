@@ -347,6 +347,7 @@
         let showDuplicates = false;
         let dealTimers = new Map(); // Track timers for each deal
         let seenTags = new Set(); // Track which item tags we've already shown
+        let dismissedDeals = new Set(); // Track deals we've dismissed (by timer or click)
 
         // Set selectors to saved values
         document.getElementById('themeSelect').value = savedTheme;
@@ -391,6 +392,7 @@
             currentDeals.clear();
             auctionUUIDs.clear();
             seenTags.clear();
+            dismissedDeals.clear();
             document.getElementById('deals').innerHTML = '';
         });
 
@@ -635,6 +637,7 @@
 
         function cp(cmd, id) {
             navigator.clipboard.writeText("/" + cmd).then(() => {
+                dismissedDeals.add(id); // Mark as dismissed
                 removeDealGracefully(id);
             });
         }
@@ -695,6 +698,11 @@
                 data.deals.forEach(d => {
                     const dealKey = d.id;
                     
+                    // Skip if we've already dismissed this deal
+                    if (dismissedDeals.has(dealKey)) {
+                        return;
+                    }
+                    
                     // Check if this tag has already been shown (for duplicate filtering)
                     const isDuplicate = seenTags.has(d.tag);
                     
@@ -716,6 +724,7 @@
                         const timerId = setTimeout(() => {
                             if(currentDeals.has(dealKey)) {
                                 console.log('Deal expired (timer):', dealData.name, dealKey);
+                                dismissedDeals.add(dealKey); // Mark as dismissed so it won't re-appear
                                 removeDealGracefully(dealKey);
                             }
                         }, 45000);
