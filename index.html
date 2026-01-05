@@ -363,6 +363,7 @@
                 dealTimers.clear();
                 currentDeals.clear();
                 auctionUUIDs.clear();
+                dismissedDeals.clear();
                 document.getElementById('deals').innerHTML = '';
             } else {
                 // When turning on duplicates, just clear the seen tags tracker
@@ -694,6 +695,16 @@
                 }
 
                 let needsRerender = false;
+                
+                // Get current backend deal IDs
+                const backendDealIds = new Set(data.deals.map(d => d.id));
+                
+                // Clean up dismissedDeals - remove any that are no longer in backend
+                for (const dismissedId of dismissedDeals) {
+                    if (!backendDealIds.has(dismissedId)) {
+                        dismissedDeals.delete(dismissedId);
+                    }
+                }
 
                 data.deals.forEach(d => {
                     const dealKey = d.id;
@@ -721,16 +732,21 @@
                         document.getElementById('beep').play().catch(()=> {});
                         
                         // Set expiration timer with graceful removal
+                        const dealAddedTime = Date.now();
                         const timerId = setTimeout(() => {
+                            const elapsed = Date.now() - dealAddedTime;
+                            console.log('Timer callback fired!', dealKey, 'after', elapsed, 'ms');
                             if(currentDeals.has(dealKey)) {
                                 console.log('Deal expired (timer):', dealData.name, dealKey);
                                 dismissedDeals.add(dealKey); // Mark as dismissed so it won't re-appear
                                 removeDealGracefully(dealKey);
+                            } else {
+                                console.log('Deal already removed:', dealKey);
                             }
                         }, 45000);
                         dealTimers.set(dealKey, timerId);
                         
-                        console.log('Deal added:', dealData.name, dealKey, 'Timer set for 45s');
+                        console.log('Deal added:', dealData.name, dealKey, 'Timer ID:', timerId, 'set for 45s at', new Date().toISOString());
                     }
                 });
 
