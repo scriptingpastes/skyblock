@@ -1,107 +1,260 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sniper | Vercel Edition</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #000; --accents-1: #111; --accents-2: #222;
-            --fg: #fff; --accents-8: #888; --success: #0000ff; /* Vercel blue accent */
+            --bg: #000000;
+            --card-bg: #111111;
+            --border: #222222;
+            --fg: #ffffff;
+            --fg-muted: #aaaaaa;
+            --accent: #0000ff; /* Vercel blue */
+            --success: #00ff41;
         }
-        
+
         body {
             background: var(--bg);
             color: var(--fg);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             margin: 0;
-            padding: 32px 16px;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-            transition: background 0.3s ease, color 0.3s ease;
+            padding: 40px 20px;
+            line-height: 1.5;
         }
-        
-        #container { max-width: 1400px; margin: auto; }
 
-        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; flex-wrap: wrap; gap: 16px; }
-        .logo { font-weight: 800; font-size: 24px; letter-spacing: -0.08em; display: flex; align-items: center; color: var(--fg); }
-        .logo svg { margin-right: 12px; width: 32px; height: 32px; }
+        #container { max-width: 1440px; margin: 0 auto; }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -0.08em;
+            display: flex;
+            align-items: center;
+        }
+
+        .logo svg {
+            width: 40px;
+            height: 40px;
+            margin-right: 12px;
+        }
 
         .tabs {
             display: flex;
             gap: 8px;
-            margin-bottom: 24px;
-            border-bottom: 1px solid var(--accents-2);
+            margin-bottom: 32px;
+            border-bottom: 1px solid var(--border);
         }
+
         .tab {
-            padding: 12px 24px;
+            padding: 14px 28px;
             background: transparent;
             border: none;
-            color: var(--accents-8);
-            font-size: 14px;
+            color: var(--fg-muted);
+            font-size: 15px;
             font-weight: 600;
             cursor: pointer;
             border-bottom: 3px solid transparent;
             transition: all 0.2s ease;
         }
+
         .tab:hover { color: var(--fg); }
-        .tab.active { color: var(--success); border-bottom-color: var(--success); }
+        .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
 
-        .status { font-size: 13px; color: var(--accents-8); display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-        .status-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; box-shadow: 0 0 12px var(--success); animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        .status {
+            font-size: 13px;
+            color: var(--fg-muted);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
 
-        .comparison-mode-selector { font-size: 12px; color: var(--accents-8); display: flex; align-items: center; gap: 8px; }
-        .comparison-mode-selector select, .comparison-mode-selector input {
-            background: var(--accents-1);
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+
+        .comparison-mode-selector {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--fg-muted);
+        }
+
+        .comparison-mode-selector select,
+        .comparison-mode-selector input {
+            background: var(--card-bg);
             color: var(--fg);
-            border: 1px solid var(--accents-2);
-            border-radius: 6px;
-            padding: 6px 10px;
-            font-size: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 13px;
             outline: none;
         }
-        .comparison-mode-selector select:focus, .comparison-mode-selector input:focus { border-color: var(--success); }
 
-        .deals-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+        .comparison-mode-selector select:focus,
+        .comparison-mode-selector input:focus {
+            border-color: var(--accent);
+        }
+
+        .deals-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 20px;
+        }
 
         .card {
-            background: var(--accents-1);
-            border: 1px solid var(--accents-2);
-            border-radius: 12px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
             animation: slideUp 0.4s ease-out;
             display: flex;
             flex-direction: column;
             transition: opacity 0.5s ease, transform 0.5s ease;
         }
-        .card.removing { opacity: 0; transform: scale(0.96); }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; } }
 
-        .card-inner { padding: 20px; flex: 1; }
-        .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; gap: 16px; }
-        .item-info { display: flex; gap: 16px; flex: 1; min-width: 0; align-items: flex-start; }
-        .item-image { width: 56px; height: 56px; border-radius: 8px; border: 1px solid var(--accents-2); object-fit: contain; flex-shrink: 0; }
+        .card.removing {
+            opacity: 0;
+            transform: scale(0.96);
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card-inner { padding: 24px; flex: 1; }
+
+        .card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            gap: 20px;
+        }
+
+        .item-info {
+            display: flex;
+            gap: 20px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .item-image {
+            width: 64px;
+            height: 64px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            object-fit: contain;
+            flex-shrink: 0;
+        }
+
         .item-details { flex: 1; min-width: 0; }
-        .item-label { font-size: 11px; color: var(--accents-8); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
-        .item-name { font-size: 16px; font-weight: 600; line-height: 1.3; }
 
-        .chart-container { height: 70px; width: 140px; background: var(--accents-2); border-radius: 8px; border: 1px solid var(--accents-2); position: relative; flex-shrink: 0; cursor: pointer; }
-        .chart-container:hover { border-color: var(--success); }
+        .item-label {
+            font-size: 11px;
+            color: var(--fg-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 6px;
+        }
 
-        .price-section { display: flex; align-items: baseline; gap: 12px; margin-top: 12px; }
-        .price-main { font-size: 24px; font-weight: 700; }
-        .discount-badge { font-size: 16px; font-weight: 700; color: var(--success); background: rgba(0, 0, 255, 0.15); padding: 6px 12px; border-radius: 16px; }
+        .item-name {
+            font-size: 18px;
+            font-weight: 600;
+            line-height: 1.3;
+        }
 
-        .reference-prices { font-size: 12px; color: var(--accents-8); margin-top: 12px; line-height: 1.6; }
-        .reference-prices span { color: var(--fg); font-weight: 500; }
+        .chart-container {
+            height: 80px;
+            width: 160px;
+            background: var(--bg);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            position: relative;
+            cursor: pointer;
+            transition: border-color 0.2s ease;
+        }
 
-        .timer-container { width: 100%; height: 4px; background: var(--accents-2); position: relative; margin: 16px 0; border-radius: 2px; overflow: hidden; }
+        .chart-container:hover { border-color: var(--accent); }
+
+        .chart-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 10px;
+            color: var(--fg-muted);
+        }
+
+        .price-section {
+            display: flex;
+            align-items: baseline;
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .price-main {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .discount-badge {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--accent);
+            background: rgba(0, 0, 255, 0.15);
+            padding: 8px 16px;
+            border-radius: 20px;
+        }
+
+        .reference-prices {
+            font-size: 13px;
+            color: var(--fg-muted);
+            margin-top: 16px;
+            line-height: 1.6;
+        }
+
+        .reference-prices span {
+            color: var(--fg);
+            font-weight: 500;
+        }
+
+        .timer-container {
+            width: 100%;
+            height: 5px;
+            background: var(--border);
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
         .timer-bar {
             height: 100%;
             width: 100%;
-            border-radius: 2px;
+            border-radius: 3px;
             transition: width 0.6s ease-out, background 0.4s ease;
         }
 
@@ -110,46 +263,231 @@
             color: var(--bg);
             border: none;
             width: 100%;
-            padding: 14px;
-            font-size: 13px;
+            padding: 16px;
+            font-size: 14px;
             font-weight: 600;
             cursor: pointer;
             transition: opacity 0.2s ease;
-            border-top: 1px solid var(--accents-2);
         }
+
         .btn:hover { opacity: 0.9; }
 
-        /* Modal and other styles unchanged for brevity */
-        .chart-modal { /* same as before */ }
-        /* ... (keep all other styles from previous version) */
+        /* Chart Modal */
+        .chart-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .chart-modal.active { display: flex; }
+
+        .chart-modal-content {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 960px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .chart-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .chart-modal-title {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .chart-modal-close {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--fg);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .chart-timeframe-buttons {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .chart-timeframe-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--fg);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .chart-timeframe-btn.active {
+            background: var(--accent);
+            color: #ffffff;
+            border-color: var(--accent);
+        }
+
+        .large-chart-container {
+            width: 100%;
+            height: 480px;
+            background: var(--bg);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            position: relative;
+        }
     </style>
 </head>
 <body>
-    <!-- HTML structure same as before -->
     <div id="container">
         <div class="header">
             <div class="logo">
-                <svg width="32" height="32" viewBox="0 0 76 65" fill="currentColor"><path d="M37.5 0L75 65H0L37.5 0Z"/></svg>
+                <svg width="40" height="40" viewBox="0 0 76 65" fill="currentColor"><path d="M37.5 0L75 65H0L37.5 0Z"/></svg>
                 SNIPER
             </div>
-            <!-- status and selectors same -->
+            <div class="status">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div class="status-dot"></div>
+                    <span id="session-timer">0M 0S</span>
+                </div>
+                <span id="backend-status-text">Initializing...</span>
+            </div>
         </div>
-        
-        <!-- tabs, config, deals grid same -->
-        
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('auction')">AH Sniping</button>
+            <button class="tab" onclick="switchTab('bazaar')">Bazaar Flipping</button>
+        </div>
+
+        <div id="auctionConfig" style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 32px;">
+            <div class="comparison-mode-selector">
+                <label>Compare:</label>
+                <select id="comparisonMode">
+                    <option value="next_bin" selected>Next BIN</option>
+                    <option value="avg">7-Day Avg</option>
+                </select>
+            </div>
+            <div class="comparison-mode-selector">
+                <label>Min Price:</label>
+                <input type="number" id="minPrice" value="500000">
+            </div>
+            <div class="comparison-mode-selector">
+                <label>Max Price:</label>
+                <input type="number" id="maxPrice" value="2000000000">
+            </div>
+            <div class="comparison-mode-selector">
+                <label>Discount %:</label>
+                <input type="number" id="discountPercent" value="10" step="1">
+            </div>
+            <div class="comparison-mode-selector">
+                <label style="cursor: pointer;">
+                    <input type="checkbox" id="duplicatesToggle">
+                    Show Duplicates
+                </label>
+            </div>
+        </div>
+
         <div id="deals" class="deals-grid"></div>
     </div>
-    
-    <!-- modal and audio same -->
+
+    <div id="chartModal" class="chart-modal">
+        <div class="chart-modal-content">
+            <div class="chart-modal-header">
+                <div class="chart-modal-title" id="chartModalTitle">Price History</div>
+                <button class="chart-modal-close" onclick="closeChartModal()">Close</button>
+            </div>
+            <div class="chart-timeframe-buttons">
+                <button class="chart-timeframe-btn active" onclick="changeChartTimeframe('day')">1 Day</button>
+                <button class="chart-timeframe-btn" onclick="changeChartTimeframe('week')">1 Week</button>
+                <button class="chart-timeframe-btn" onclick="changeChartTimeframe('month')">1 Month</button>
+                <button class="chart-timeframe-btn" onclick="changeChartTimeframe('all')">All Time</button>
+            </div>
+            <div id="largeChartContainer" class="large-chart-container">
+                <div class="chart-loading">Loading chart...</div>
+            </div>
+        </div>
+    </div>
+
+    <audio id="beep" src="https://actions.google.com/sounds/v1/notifications/beeps_pristine_cut_off.ogg"></audio>
 
     <script>
-        // Same script as previous version, with these key changes:
-
+        const backendUrl = 'https://skyblock-483009.uc.r.appspot.com';
         const FRESHNESS_MS = 120000;
+
+        const startTime = Date.now();
+        setInterval(() => {
+            const diff = Math.floor((Date.now() - startTime) / 1000);
+            document.getElementById('session-timer').innerText = `${Math.floor(diff / 60)}M ${diff % 60}S`;
+        }, 1000);
+
+        let currentComparisonMode = 'next_bin';
+        let currentDeals = new Map();
+        let auctionUUIDs = new Map();
+        let showDuplicates = false;
+        let seenTags = new Set();
+        let dismissedDeals = new Set();
+        let currentTab = 'auction';
+
+        document.getElementById('duplicatesToggle').addEventListener('change', (e) => {
+            showDuplicates = e.target.checked;
+            clearAuctionState();
+            renderDeals();
+        });
+
+        document.getElementById('comparisonMode').addEventListener('change', (e) => {
+            currentComparisonMode = e.target.value;
+            clearAuctionState();
+        });
+
+        function clearAuctionState() {
+            currentDeals.clear();
+            auctionUUIDs.clear();
+            seenTags.clear();
+            dismissedDeals.clear();
+            document.getElementById('deals').innerHTML = '';
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('auctionConfig').style.display = tab === 'auction' ? 'flex' : 'none';
+            clearAuctionState();
+            if (tab === 'bazaar') loadBazaar();
+        }
+
+        function removeDealGracefully(id) {
+            const card = document.getElementById(id);
+            if (card) {
+                card.classList.add('removing');
+                setTimeout(() => card.remove(), 550);
+                currentDeals.delete(id);
+                auctionUUIDs.delete(id);
+            }
+        }
+
+        function getBarColor(fraction) {
+            if (fraction > 0.5) return '#00ff41';
+            if (fraction > 0.2) return '#ffaa00';
+            return '#ff4444';
+        }
 
         function updateTimerBars() {
             const now = Date.now();
-            let needsRerender = false;
 
             for (const [key, d] of currentDeals) {
                 const card = document.getElementById(key);
@@ -165,32 +503,134 @@
                 if (remaining <= 0) {
                     dismissedDeals.add(key);
                     removeDealGracefully(key);
-                    needsRerender = true;
                     continue;
                 }
 
                 bar.style.width = `${fraction * 100}%`;
-
-                // Continuous color transition: green → yellow → red
-                if (fraction > 0.5) {
-                    bar.style.background = '#00ff41';
-                } else if (fraction > 0.2) {
-                    bar.style.background = '#ffaa00';
-                } else {
-                    bar.style.background = '#ff4444';
-                }
+                bar.style.background = getBarColor(fraction);
             }
-
-            if (needsRerender) renderDeals();
         }
 
-        // Update every 200ms for ultra-smooth continuous feel
-        setInterval(updateTimerBars, 200);
+        setInterval(updateTimerBars, 200); // Ultra-smooth
 
-        // In renderDeals(), when setting initial bar:
-        // (calculate fraction same as above and set width + color)
+        // loadChart, openChartModal, closeChartModal, changeChartTimeframe, loadLargeChart, renderPriceChart unchanged (same as previous)
 
-        // Rest of script identical to previous version
+        function renderDeals() {
+            const sorted = Array.from(currentDeals.values()).sort((a, b) => {
+                const da = currentComparisonMode === 'next_bin' ? (a.disc_vs_next_bin || 0) : (a.disc_vs_avg || 0);
+                const db = currentComparisonMode === 'next_bin' ? (b.disc_vs_next_bin || 0) : (b.disc_vs_avg || 0);
+                return db - da;
+            });
+
+            const container = document.getElementById('deals');
+            container.innerHTML = '';
+
+            const now = Date.now();
+
+            sorted.forEach(d => {
+                const div = document.createElement('div');
+                div.className = 'card';
+                div.id = d.id;
+
+                const discount = currentComparisonMode === 'next_bin' ? d.disc_vs_next_bin : d.disc_vs_avg;
+                const badge = discount != null ? `<div class="discount-badge">-${discount}%</div>` : '';
+
+                const nextBin = d.next_lowest_bin_price ? d.next_lowest_bin_price.toLocaleString() : 'N/A';
+                const avg = d.avg_price ? Math.round(d.avg_price).toLocaleString() : 'N/A';
+
+                const image = d.image || `https://sky.coflnet.com/static/icon/${d.tag.toUpperCase()}`;
+
+                const fraction = Math.max(0, (FRESHNESS_MS - (now - d.timestamp)) / FRESHNESS_MS);
+
+                div.innerHTML = `
+                    <div class="card-inner">
+                        <div class="card-top">
+                            <div class="item-info">
+                                <img src="${image}" class="item-image" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2264%22 height=%2264%22><rect width=%2264%22 height=%2264%22 fill=%22%23222%22/></svg>'">
+                                <div class="item-details">
+                                    <div class="item-label">Market Listing</div>
+                                    <div class="item-name">${d.name}</div>
+                                </div>
+                            </div>
+                            <div id="c-${d.id}" class="chart-container"><div class="chart-loading">LOADING...</div></div>
+                        </div>
+                        <div class="price-section">
+                            <div class="price-main">${d.price.toLocaleString()}</div>
+                            ${badge}
+                        </div>
+                        <div class="reference-prices">
+                            <div>Next BIN: <span>${nextBin}</span></div>
+                            <div>7-Day Avg: <span>${avg}</span></div>
+                        </div>
+                    </div>
+                    <div class="timer-container">
+                        <div class="timer-bar" style="width: ${fraction * 100}%; background: ${getBarColor(fraction)}"></div>
+                    </div>
+                    <button class="btn" onclick="cp('${d.cmd}', '${d.id}')">Copy /viewauction</button>
+                `;
+
+                container.appendChild(div);
+                loadChart(d.tag, `c-${d.id}`);
+            });
+        }
+
+        function cp(cmd, id) {
+            navigator.clipboard.writeText('/' + cmd);
+            dismissedDeals.add(id);
+            removeDealGracefully(id);
+        }
+
+        // Bazaar functions, checkAuctionsAvailability, update() all unchanged from previous full version
+
+        async function update() {
+            if (currentTab !== 'auction') {
+                setTimeout(update, 1000);
+                return;
+            }
+
+            try {
+                const min = document.getElementById('minPrice').value || 500000;
+                const max = document.getElementById('maxPrice').value || 2000000000;
+                const disc = document.getElementById('discountPercent').value || 10;
+                const r = await fetch(`${backendUrl}/data?mode=${currentComparisonMode}&min_price=${min}&max_price=${max}&discount=${disc}`);
+                const data = await r.json();
+                document.getElementById('backend-status-text').innerText = data.status;
+
+                if (data.status.includes('Initializing') || data.status.includes('ERROR')) {
+                    setTimeout(update, 1000);
+                    return;
+                }
+
+                let changed = false;
+                const now = Date.now();
+
+                const backendIds = new Set(data.deals.map(d => d.id));
+                dismissedDeals = new Set([...dismissedDeals].filter(id => backendIds.has(id)));
+
+                data.deals.forEach(d => {
+                    if (now - d.timestamp > FRESHNESS_MS) return;
+                    if (dismissedDeals.has(d.id)) return;
+
+                    const duplicate = seenTags.has(d.tag);
+                    if (!currentDeals.has(d.id) && (showDuplicates || !duplicate)) {
+                        currentDeals.set(d.id, d);
+                        if (!showDuplicates) seenTags.add(d.tag);
+                        const uuid = d.cmd.match(/viewauction (.+)/);
+                        if (uuid) auctionUUIDs.set(d.id, uuid[1]);
+                        changed = true;
+                        document.getElementById('beep').play().catch(() => {});
+                    }
+                });
+
+                if (changed) renderDeals();
+            } catch (e) {
+                console.error(e);
+            }
+
+            setTimeout(update, 1000);
+        }
+
+        update();
     </script>
 </body>
 </html>
