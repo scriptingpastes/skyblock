@@ -1,166 +1,853 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Skyblock Auction Sniper</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #121212;
-      color: #e0e0e0;
-      margin: 0;
-      padding: 20px;
-    }
-    h1 {
-      text-align: center;
-      color: #bb86fc;
-    }
-    #status {
-      text-align: center;
-      font-size: 1.2em;
-      margin: 20px 0;
-      color: #03dac6;
-    }
-    #deals {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 15px;
-      max-width: 1400px;
-      margin: 0 auto;
-    }
-    .deal {
-      background: #1e1e1e;
-      border: 1px solid #333;
-      border-radius: 8px;
-      padding: 15px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-      transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-    }
-    .deal img {
-      width: 64px;
-      height: 64px;
-      image-rendering: pixelated;
-      margin-right: 15px;
-      vertical-align: middle;
-    }
-    .deal-info {
-      display: inline-block;
-      vertical-align: middle;
-      width: calc(100% - 80px);
-    }
-    .deal-name {
-      font-weight: bold;
-      font-size: 1.1em;
-      color: #ffffff;
-    }
-    .deal-price {
-      font-size: 1.3em;
-      color: #cfcfcf;
-      margin: 8px 0;
-    }
-    .deal-discount {
-      font-size: 1em;
-      margin: 5px 0;
-    }
-    .next-bin {
-      color: #ffeb3b;
-    }
-    .avg-disc {
-      color: #4caf50;
-    }
-    .deal-cmd {
-      background: #2d2d2d;
-      padding: 8px;
-      border-radius: 4px;
-      font-family: monospace;
-      word-break: break-all;
-      margin-top: 10px;
-      cursor: pointer;
-      user-select: all;
-    }
-    .deal.removing {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Sniper | Vercel Edition</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #000; --accents-1: #111; --accents-2: #333;
+            --fg: #fff; --accents-8: #888; --success: #00ff41;
+        }
+        
+        /* Theme definitions */
+        body.theme-dark {
+            --bg: #000; --accents-1: #111; --accents-2: #333;
+            --fg: #fff; --accents-8: #888; --success: #00ff41;
+        }
+        body.theme-bloomberg {
+            --bg: #000000; --accents-1: #1a1a00; --accents-2: #2a2a00;
+            --fg: #FFA028; --accents-8: #ff8800; --success: #4af6c3;
+        }
+        body.theme-light {
+            --bg: #ffffff; --accents-1: #f5f5f5; --accents-2: #e0e0e0;
+            --fg: #000; --accents-8: #666; --success: #00c853;
+        }
+        body.theme-blue {
+            --bg: #0a1628; --accents-1: #152238; --accents-2: #1e3a5f;
+            --fg: #e0f2fe; --accents-8: #94a3b8; --success: #38bdf8;
+        }
+        body.theme-purple {
+            --bg: #1a0b2e; --accents-1: #2d1b4e; --accents-2: #4c3575;
+            --fg: #f0e6ff; --accents-8: #a78bfa; --success: #c084fc;
+        }
+        body.theme-matrix {
+            --bg: #0a1f0a; --accents-1: #162d16; --accents-2: #1e4620;
+            --fg: #00ff00; --accents-8: #00cc00; --success: #ffff00;
+        }
+        body.theme-nord {
+            --bg: #2e3440; --accents-1: #3b4252; --accents-2: #434c5e;
+            --fg: #eceff4; --accents-8: #d8dee9; --success: #a3be8c;
+        }
+        
+        /* Font classes */
+        body.font-inter { font-family: 'Inter', -apple-system, system-ui, sans-serif; }
+        body.font-courier { font-family: 'Courier New', 'Courier', monospace; }
+        body.font-consolas { font-family: 'Consolas', 'Monaco', 'Lucida Console', monospace; }
+        body.font-system { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; }
+        body.font-bloomberg { font-family: 'IBM Plex Mono', 'Roboto Mono', 'Consolas', monospace; }
+        body.font-roboto { font-family: 'Roboto Mono', 'Consolas', monospace; }
+        
+        body { 
+            background: var(--bg); 
+            color: var(--fg); 
+            margin: 0; 
+            padding: 20px 10px; 
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+        #container { max-width: 1400px; margin: auto; }
+
+        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;}
+        .logo { font-weight: 800; font-size: 14px; letter-spacing: -0.05em; display: flex; align-items: center; }
+        .logo svg { margin-right: 8px; }
+        
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--accents-2);
+        }
+        .tab {
+            padding: 10px 20px;
+            background: transparent;
+            border: none;
+            color: var(--accents-8);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+        .tab:hover {
+            color: var(--fg);
+        }
+        .tab.active {
+            color: var(--success);
+            border-bottom-color: var(--success);
+        }
+        
+        .status { font-size: 12px; color: var(--accents-8); display: flex; align-items: center; margin-top: 5px; gap: 10px; flex-wrap: wrap; }
+        .status-dot { width: 6px; height: 6px; background: var(--success); border-radius: 50%; margin-right: 8px; box-shadow: 0 0 8px var(--success); }
+
+        .comparison-mode-selector, .theme-selector, .font-selector {
+            font-size: 11px;
+            color: var(--accents-8);
+            display: flex;
+            align-items: center;
+        }
+        .comparison-mode-selector label, .theme-selector label, .font-selector label {
+            margin-right: 5px;
+        }
+        .comparison-mode-selector select, .theme-selector select, .font-selector select {
+            background: var(--accents-1);
+            color: var(--fg);
+            border: 1px solid var(--accents-2);
+            border-radius: 4px;
+            padding: 4px 6px;
+            font-size: 11px;
+            outline: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            cursor: pointer;
+        }
+        .comparison-mode-selector select:focus, .theme-selector select:focus, .font-selector select:focus {
+            border-color: var(--success);
+        }
+
+        .deals-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 12px;
+        }
+
+        .card {
+            background: var(--bg); border: 1px solid var(--accents-2); border-radius: 8px;
+            position: relative; overflow: hidden;
+            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        .card.removing {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }        
+
+        .card-inner { padding: 16px; flex: 1; }
+        .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 10px; }
+        .item-info { display: flex; gap: 12px; flex: 1; min-width: 0; align-items: flex-start; }
+        .item-image { width: 48px; height: 48px; background: var(--accents-1); border-radius: 4px; border: 1px solid var(--accents-2); flex-shrink: 0; object-fit: contain; }
+        .item-details { flex: 1; min-width: 0; }
+        .item-name { font-size: 14px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.3; }
+        .item-label { font-size: 10px; color: var(--accents-8); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+
+        .chart-container { 
+            height: 60px; 
+            width: 120px; 
+            background: var(--accents-1); 
+            border-radius: 4px; 
+            border: 1px solid var(--accents-2); 
+            position: relative; 
+            flex-shrink: 0;
+            cursor: pointer;
+            transition: border-color 0.2s ease;
+        }
+        .chart-container:hover {
+            border-color: var(--success);
+        }
+        .chart-loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 9px; color: var(--accents-8); }
+
+        /* Chart modal */
+        .chart-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+        .chart-modal.active {
+            display: flex;
+        }
+        .chart-modal-content {
+            background: var(--bg);
+            border: 2px solid var(--accents-2);
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 900px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .chart-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .chart-modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--fg);
+        }
+        .chart-modal-close {
+            background: var(--accents-1);
+            border: 1px solid var(--accents-2);
+            color: var(--fg);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .chart-modal-close:hover {
+            background: var(--accents-2);
+        }
+        .chart-timeframe-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .chart-timeframe-btn {
+            background: var(--accents-1);
+            border: 1px solid var(--accents-2);
+            color: var(--fg);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        .chart-timeframe-btn:hover {
+            background: var(--accents-2);
+        }
+        .chart-timeframe-btn.active {
+            background: var(--success);
+            color: var(--bg);
+            border-color: var(--success);
+        }
+        .large-chart-container {
+            width: 100%;
+            height: 400px;
+            background: var(--accents-1);
+            border-radius: 8px;
+            border: 1px solid var(--accents-2);
+            position: relative;
+        }
+
+        .price-section { display: flex; align-items: baseline; gap: 8px; margin-top: 8px; }
+        .price-main { font-size: 18px; font-weight: 800; }
+        .discount-badge { font-size: 14px; font-weight: 700; color: var(--success); background: rgba(0, 255, 65, 0.1); padding: 4px 10px; border-radius: 12px; }
+        
+        .reference-prices {
+            font-size: 10px;
+            color: var(--accents-8);
+            margin-top: 8px;
+            line-height: 1.5;
+        }
+        .reference-prices span {
+            color: var(--fg);
+            font-weight: 500;
+        }
+
+        .timer-container { width: 100%; height: 1px; background: var(--accents-1); position: relative; }
+        .timer-bar {
+            height: 100%; background: var(--fg); width: 100%;
+            transform-origin: left; animation: shrink 45s linear forwards;
+        }
+        @keyframes shrink { from { transform: scaleX(1); } to { transform: scaleX(0); } }        
+
+        .btn {
+            background: var(--fg); color: var(--bg); border: none; width: 100%;
+            padding: 10px; font-size: 11px; font-weight: 600; cursor: pointer; transition: opacity 0.2s ease;
+        }
+        .btn:active { opacity: 0.8; }
+        .axis-label { font-size: 8px; fill: var(--accents-8); font-family: monospace; }
+
+        @media (max-width: 768px) {
+            .deals-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
-<body>
-  <h1>Skyblock Auction Sniper</h1>
-  <div id="status">Loading...</div>
-  <div id="deals"></div>
-
-  <script>
-    // CHANGE THIS TO YOUR BACKEND URL
-    const backendUrl = 'http://localhost:8080';  // e.g., 'https://your-project.appspot.com'
-
-    function removeDealGracefully(dealId) {
-      const element = document.getElementById('deal-' + dealId);
-      if (element) {
-        element.classList.add('removing');
-        setTimeout(() => element.remove(), 500);
-      }
-    }
-
-    async function fetchDeals() {
-      try {
-        const resp = await fetch(`${backendUrl}/data`);
-        const data = await resp.json();
-        document.getElementById('status').textContent = data.status || 'No status';
-
-        const dealsContainer = document.getElementById('deals');
-        const currentIds = new Set(data.deals.map(d => d.id));
-
-        // Add new deals (prepend so newest on top)
-        data.deals.forEach(deal => {
-          if (document.getElementById('deal-' + deal.id)) return;  // Already exists
-
-          const div = document.createElement('div');
-          div.className = 'deal';
-          div.id = 'deal-' + deal.id;
-          div.dataset.id = deal.id;
-
-          const nextBinText = deal.disc_vs_next_bin !== null 
-            ? `<span class="deal-discount next-bin">Undercut next BIN by ${deal.disc_vs_next_bin}%</span><br>` 
-            : '';
-
-          const avgText = deal.disc_vs_avg !== null 
-            ? `<span class="deal-discount avg-disc">Under 7-day avg by ${deal.disc_vs_avg}%</span>` 
-            : '';
-
-          div.innerHTML = `
-            <img src="${deal.image}" alt="${deal.name}">
-            <div class="deal-info">
-              <div class="deal-name">${deal.name}</div>
-              <div class="deal-price">${deal.price.toLocaleString()} coins</div>
-              ${nextBinText}
-              ${avgText}
-              <div class="deal-cmd" onclick="navigator.clipboard.writeText('${deal.cmd}')">Click to copy: ${deal.cmd}</div>
+<body class="theme-dark font-inter">
+    <div id="container">
+        <div class="header">
+            <div class="logo">
+                <svg width="24" height="24" viewBox="0 0 76 65" fill="currentColor"><path d="M37.5 0L75 65H0L37.5 0Z"/></svg>
+                SNIPER V2
             </div>
-          `;
+            <div class="status">
+                <div style="display: flex; align-items: center;">
+                    <div class="status-dot"></div>
+                    <span id="session-timer">0M 0S</span>
+                </div>
+                <span id="backend-status-text">Initializing...</span>
+                <div class="theme-selector">
+                    <label for="themeSelect">Theme:</label>
+                    <select id="themeSelect">
+                        <option value="dark">Dark</option>
+                        <option value="bloomberg">Bloomberg Terminal</option>
+                        <option value="light">Light</option>
+                        <option value="blue">Blue</option>
+                        <option value="purple">Purple</option>
+                        <option value="matrix">Matrix</option>
+                        <option value="nord">Nord</option>
+                    </select>
+                </div>
+                <div class="font-selector">
+                    <label for="fontSelect">Font:</label>
+                    <select id="fontSelect">
+                        <option value="inter">Inter</option>
+                        <option value="bloomberg">IBM Plex Mono</option>
+                        <option value="roboto">Roboto Mono</option>
+                        <option value="courier">Courier</option>
+                        <option value="consolas">Consolas</option>
+                        <option value="system">System</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('auction')">AH Sniping</button>
+            <button class="tab" onclick="switchTab('bazaar')">Bazaar Flipping</button>
+        </div>
+        
+        <!-- Configuration (only for auction tab) -->
+        <div id="auctionConfig" class="status" style="margin-bottom: 15px;">
+            <div class="comparison-mode-selector">
+                <label for="comparisonMode">Compare:</label>
+                <select id="comparisonMode">
+                    <option value="next_bin" selected>Next BIN</option>
+                    <option value="avg">7-Day Avg</option>
+                </select>
+            </div>
+            <div class="comparison-mode-selector">
+                <label for="minPrice">Min:</label>
+                <input type="number" id="minPrice" value="500000" style="width: 100px; background: var(--accents-1); color: var(--fg); border: 1px solid var(--accents-2); border-radius: 4px; padding: 4px 6px; font-size: 11px;">
+            </div>
+            <div class="comparison-mode-selector">
+                <label for="maxPrice">Max:</label>
+                <input type="number" id="maxPrice" value="2000000000" style="width: 120px; background: var(--accents-1); color: var(--fg); border: 1px solid var(--accents-2); border-radius: 4px; padding: 4px 6px; font-size: 11px;">
+            </div>
+            <div class="comparison-mode-selector">
+                <label for="discountPercent">Discount %:</label>
+                <input type="number" id="discountPercent" value="10" step="1" style="width: 60px; background: var(--accents-1); color: var(--fg); border: 1px solid var(--accents-2); border-radius: 4px; padding: 4px 6px; font-size: 11px;">
+            </div>
+            <div class="comparison-mode-selector">
+                <label for="duplicatesToggle" style="cursor: pointer;">
+                    <input type="checkbox" id="duplicatesToggle" style="margin-right: 3px; cursor: pointer;">
+                    Show Duplicates
+                </label>
+            </div>
+        </div>
+        
+        <div id="deals" class="deals-grid"></div>
+    </div>
+    
+    <!-- Chart Modal -->
+    <div id="chartModal" class="chart-modal">
+        <div class="chart-modal-content">
+            <div class="chart-modal-header">
+                <div class="chart-modal-title" id="chartModalTitle">Price History</div>
+                <button class="chart-modal-close" onclick="closeChartModal()">Close</button>
+            </div>
+            <div class="chart-timeframe-buttons">
+                <button class="chart-timeframe-btn active" onclick="changeChartTimeframe('day')">1 Day</button>
+                <button class="chart-timeframe-btn" onclick="changeChartTimeframe('week')">1 Week</button>
+                <button class="chart-timeframe-btn" onclick="changeChartTimeframe('month')">1 Month</button>
+                <button class="chart-timeframe-btn" onclick="changeChartTimeframe('all')">All Time</button>
+            </div>
+            <div id="largeChartContainer" class="large-chart-container">
+                <div class="chart-loading">Loading chart...</div>
+            </div>
+        </div>
+    </div>
+    
+    <audio id="beep" src="https://actions.google.com/sounds/v1/notifications/beeps_pristine_cut_off.ogg"></audio>
 
-          dealsContainer.prepend(div);
+    <script>
+        const backendUrl = 'https://skyblock-483009.uc.r.appspot.com'; // Change if your backend is deployed elsewhere
 
-          // Auto-remove after 2 minutes (freshness threshold)
-          setTimeout(() => removeDealGracefully(deal.id), 120000);
+        // Theme and font management
+        const savedTheme = localStorage.getItem('sniperTheme') || 'dark';
+        const savedFont = localStorage.getItem('sniperFont') || 'inter';
+        document.body.className = `theme-${savedTheme} font-${savedFont}`;
+        
+        const startTime = Date.now();
+        setInterval(() => {
+            const diff = Math.floor((Date.now() - startTime) / 1000);
+            document.getElementById('session-timer').innerText = `${Math.floor(diff/60)}M ${diff%60}S`;
+        }, 1000);
+
+        let currentComparisonMode = 'next_bin';
+        let currentDeals = new Map();
+        let auctionUUIDs = new Map();
+        let showDuplicates = false;
+        let dealTimers = new Map();
+        let seenTags = new Set();
+        let dismissedDeals = new Set();
+        let currentTab = 'auction';
+        let bazaarData = [];
+
+        // Set selectors to saved values
+        document.getElementById('themeSelect').value = savedTheme;
+        document.getElementById('fontSelect').value = savedFont;
+        
+        // Duplicates toggle handler
+        document.getElementById('duplicatesToggle').addEventListener('change', (event) => {
+            showDuplicates = event.target.checked;
+            clearAuctionState();
+            renderDeals(); // Re-render with new duplicate setting
+        });
+        
+        // Theme change handler
+        document.getElementById('themeSelect').addEventListener('change', (event) => {
+            const theme = event.target.value;
+            document.body.className = document.body.className.replace(/theme-\w+/, `theme-${theme}`);
+            localStorage.setItem('sniperTheme', theme);
         });
 
-        // Remove deals no longer in the current data
-        Array.from(dealsContainer.children).forEach(el => {
-          if (!currentIds.has(el.dataset.id)) {
-            removeDealGracefully(el.dataset.id);
-          }
+        // Font change handler
+        document.getElementById('fontSelect').addEventListener('change', (event) => {
+            const font = event.target.value;
+            document.body.className = document.body.className.replace(/font-\w+/, `font-${font}`);
+            localStorage.setItem('sniperFont', font);
         });
 
-      } catch (e) {
-        console.error(e);
-        document.getElementById('status').textContent = 'Error connecting to backend';
-      }
-    }
+        document.getElementById('comparisonMode').addEventListener('change', (event) => {
+            currentComparisonMode = event.target.value;
+            clearAuctionState();
+        });
 
-    // Poll every 5 seconds
-    setInterval(fetchDeals, 5000);
-    fetchDeals();  // Initial fetch
-  </script>
+        function clearAuctionState() {
+            dealTimers.forEach(timer => clearTimeout(timer));
+            dealTimers.clear();
+            currentDeals.clear();
+            auctionUUIDs.clear();
+            seenTags.clear();
+            dismissedDeals.clear();
+            document.getElementById('deals').innerHTML = '';
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('auctionConfig').style.display = tab === 'auction' ? 'flex' : 'none';
+            clearAuctionState();
+            if (tab === 'bazaar') {
+                loadBazaar();
+            }
+        }
+
+        function removeDealGracefully(id) {
+            const card = document.getElementById(id);
+            if (card) {
+                card.classList.add('removing');
+                setTimeout(() => {
+                    if (card.parentNode) card.remove();
+                    currentDeals.delete(id);
+                    auctionUUIDs.delete(id);
+                    if (dealTimers.has(id)) {
+                        clearTimeout(dealTimers.get(id));
+                        dealTimers.delete(id);
+                    }
+                }, 550);
+            }
+        }
+
+        async function loadChart(tag, chartId) {
+            const container = document.getElementById(chartId);
+            try {
+                const url = `${backendUrl}/api/price_history/${tag}?timeframe=week`;
+                const r = await fetch(url);
+                const response = await r.json();
+                
+                if (!response.success || !response.data || response.data.length < 2) {
+                    container.innerHTML = '<div class="chart-loading">NO HISTORY</div>';
+                    return;
+                }
+
+                let prices = response.data.map(d => d.price);
+                const sortedPrices = [...prices].sort((a, b) => a - b);
+                const median = sortedPrices[Math.floor(sortedPrices.length / 2)];
+                prices = prices.filter(p => p <= median * 5 && p >= median / 5);
+
+                const max = Math.max(...prices), min = Math.min(...prices), range = (max - min) || 1;
+                const width = 120, height = 60, pad = 8;
+                let path = "";
+                prices.forEach((p, i) => {
+                    const x = (i / (prices.length - 1)) * width;
+                    const y = height - ((p - min) / range) * (height - pad * 2) - pad;
+                    path += (i === 0 ? "M" : "L") + ` ${x} ${y}`;
+                });
+
+                container.innerHTML = `
+                    <svg width="${width}" height="${height}" style="overflow:visible">
+                        <line x1="0" y1="15" x2="${width}" y2="15" stroke="#444" stroke-dasharray="2" stroke-width="0.5" />
+                        <line x1="0" y1="30" x2="${width}" y2="30" stroke="#444" stroke-dasharray="2" stroke-width="0.5" />
+                        <line x1="0" y1="45" x2="${width}" y2="45" stroke="#444" stroke-dasharray="2" stroke-width="0.5" />
+                        <path d="${path}" fill="none" stroke="#0070f3" stroke-width="2" stroke-linejoin="round" />
+                        <text x="0" y="${height-2}" class="axis-label">-7d</text>
+                        <text x="${width}" y="${height-2}" class="axis-label" text-anchor="end">NOW</text>
+                    </svg>
+                `;
+                
+                container.style.cursor = 'pointer';
+                container.onclick = () => openChartModal(tag);
+            } catch (e) {
+                console.error('Chart error:', e);
+                container.innerHTML = '<div class="chart-loading">NO DATA</div>';
+            }
+        }
+
+        // Chart modal state
+        let currentChartTag = null;
+        let currentTimeframe = 'week';
+
+        function openChartModal(tag) {
+            currentChartTag = tag;
+            document.getElementById('chartModalTitle').textContent = `${tag.replace(/_/g, ' ').toUpperCase()} - Price History`;
+            document.getElementById('chartModal').classList.add('active');
+            loadLargeChart();
+        }
+
+        function closeChartModal() {
+            document.getElementById('chartModal').classList.remove('active');
+            currentChartTag = null;
+        }
+
+        function changeChartTimeframe(timeframe) {
+            currentTimeframe = timeframe;
+            document.querySelectorAll('.chart-timeframe-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            loadLargeChart();
+        }
+
+        async function loadLargeChart() {
+            const container = document.getElementById('largeChartContainer');
+            container.innerHTML = '<div class="chart-loading">Loading chart...</div>';
+            
+            try {
+                const url = `${backendUrl}/api/price_history/${currentChartTag}?timeframe=${currentTimeframe}`;
+                const r = await fetch(url);
+                const response = await r.json();
+                
+                if (!response.success || !response.data || response.data.length < 2) {
+                    container.innerHTML = '<div class="chart-loading">NO HISTORY</div>';
+                    return;
+                }
+
+                let data = response.data.map(d => ({
+                    price: d.price,
+                    time: d.timestamp
+                }));
+
+                const prices = data.map(d => d.price);
+                const sortedPrices = [...prices].sort((a, b) => a - b);
+                const median = sortedPrices[Math.floor(sortedPrices.length / 2)];
+                data = data.filter(d => d.price <= median * 5 && d.price >= median / 5);
+
+                if (data.length === 0) {
+                    container.innerHTML = '<div class="chart-loading">NO VALID DATA</div>';
+                    return;
+                }
+
+                renderPriceChart(container, data);
+            } catch (e) {
+                console.error('Chart error:', e);
+                container.innerHTML = '<div class="chart-loading">ERROR LOADING</div>';
+            }
+        }
+
+        function renderPriceChart(container, data) {
+            const width = container.clientWidth - 80;
+            const height = 400;
+            const padding = { top: 30, right: 60, bottom: 40, left: 60 };
+            
+            const prices = data.map(d => d.price);
+            const maxPrice = Math.max(...prices);
+            const minPrice = Math.min(...prices);
+            const priceRange = maxPrice - minPrice || 1;
+            
+            let svg = `<svg width="${width + 80}" height="${height}" style="overflow:visible">`;
+            
+            for (let i = 0; i <= 5; i++) {
+                const y = padding.top + (height - padding.top - padding.bottom) * i / 5;
+                const price = maxPrice - (priceRange * i / 5);
+                svg += `<line x1="${padding.left}" y1="${y}" x2="${width + padding.left}" y2="${y}" stroke="#333" stroke-dasharray="4" stroke-width="1" />`;
+                svg += `<text x="${width + padding.left + 5}" y="${y + 4}" class="axis-label" fill="#888">${Math.round(price).toLocaleString()}</text>`;
+            }
+            
+            const plotWidth = width - padding.left;
+            const plotHeight = height - padding.top - padding.bottom;
+            
+            let linePath = "";
+            data.forEach((point, i) => {
+                const x = padding.left + (i / (data.length - 1)) * plotWidth;
+                const y = padding.top + plotHeight * (1 - (point.price - minPrice) / priceRange);
+                linePath += (i === 0 ? "M" : "L") + ` ${x} ${y}`;
+            });
+            
+            svg += `<path d="${linePath}" fill="none" stroke="#0070f3" stroke-width="3" />`;
+            
+            data.forEach((point, i) => {
+                const x = padding.left + (i / (data.length - 1)) * plotWidth;
+                const y = padding.top + plotHeight * (1 - (point.price - minPrice) / priceRange);
+                const pricePosition = (point.price - minPrice) / priceRange;
+                const color = pricePosition > 0.5 ? '#4af6c3' : '#ff6b6b';
+                svg += `<circle cx="${x}" cy="${y}" r="4" fill="${color}" stroke="#000" stroke-width="1" />`;
+            });
+            
+            const numLabels = Math.min(6, data.length);
+            for (let i = 0; i < numLabels; i++) {
+                const dataIndex = Math.floor((data.length - 1) * i / (numLabels - 1));
+                const x = padding.left + (dataIndex / (data.length - 1)) * plotWidth;
+                const date = new Date(data[dataIndex].time);
+                const label = `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
+                svg += `<text x="${x}" y="${height - 10}" class="axis-label" text-anchor="middle" font-size="9">${label}</text>`;
+            }
+            
+            svg += `<text x="${padding.left}" y="15" class="axis-label" fill="#0070f3" font-weight="bold">Sold Auction Prices</text>`;
+            svg += `<text x="${width + padding.left}" y="15" class="axis-label" fill="#888" text-anchor="end">${data.length} sales</text>`;
+            
+            svg += '</svg>';
+            container.innerHTML = svg;
+        }
+
+        document.addEventListener('click', (e) => {
+            if (e.target.id === 'chartModal') {
+                closeChartModal();
+            }
+        });
+
+        function renderDeals() {
+            const sortedDeals = Array.from(currentDeals.values()).sort((a, b) => {
+                const discountA = currentComparisonMode === 'next_bin' ? (a.disc_vs_next_bin || 0) : (a.disc_vs_avg || 0);
+                const discountB = currentComparisonMode === 'next_bin' ? (b.disc_vs_next_bin || 0) : (b.disc_vs_avg || 0);
+                return discountB - discountA;
+            });
+
+            const dealsContainer = document.getElementById('deals');
+            dealsContainer.innerHTML = '';
+
+            sortedDeals.forEach(d => {
+                const div = document.createElement('div');
+                div.className = 'card';
+                div.id = d.id;
+
+                const displayedDiscount = currentComparisonMode === 'next_bin' ? d.disc_vs_next_bin : d.disc_vs_avg;
+                const discountBadge = displayedDiscount != null ? `<div class="discount-badge">-${displayedDiscount}%</div>` : '';
+
+                const referenceNextBin = d.next_lowest_bin_price ? d.next_lowest_bin_price.toLocaleString() : 'N/A';
+                const referenceAvg = d.avg_price ? Math.round(d.avg_price).toLocaleString() : 'N/A';
+
+                const imageUrl = d.image || `https://sky.coflnet.com/static/icon/${d.tag.toUpperCase()}`;
+
+                div.innerHTML = `
+                    <div class="card-inner">
+                        <div class="card-top">
+                            <div class="item-info">
+                                <img src="${imageUrl}" class="item-image" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22><rect width=%2248%22 height=%2248%22 fill=%22%23333%22/></svg>'">
+                                <div class="item-details">
+                                    <div class="item-label">Market Listing</div>
+                                    <div class="item-name">${d.name}</div>
+                                </div>
+                            </div>
+                            <div id="c-${d.id}" class="chart-container"><div class="chart-loading">LOADING...</div></div>
+                        </div>
+                        <div class="price-section">
+                            <div class="price-main">${d.price.toLocaleString()}</div>
+                            ${discountBadge}
+                        </div>
+                        <div class="reference-prices">
+                            <div>Next BIN: <span>${referenceNextBin}</span></div>
+                            <div>7-Day Avg: <span>${referenceAvg}</span></div>
+                        </div>
+                    </div>
+                    <div class="timer-container"><div class="timer-bar"></div></div>
+                    <button class="btn" onclick="cp('${d.cmd}', '${d.id}')">Copy /viewauction</button>
+                `;
+                
+                dealsContainer.appendChild(div);
+                loadChart(d.tag, `c-${d.id}`);
+            });
+        }
+
+        function cp(cmd, id) {
+            navigator.clipboard.writeText("/" + cmd).then(() => {
+                dismissedDeals.add(id);
+                removeDealGracefully(id);
+            });
+        }
+
+        async function loadBazaar() {
+            try {
+                const r = await fetch(`${backendUrl}/api/bazaar`);
+                const data = await r.json();
+                if (data.success && data.opportunities) {
+                    bazaarData = data.opportunities;
+                    renderBazaar();
+                }
+            } catch (e) {
+                console.error('Bazaar load error:', e);
+            }
+        }
+
+        function renderBazaar() {
+            bazaarData.sort((a, b) => b.score - a.score);
+            const container = document.getElementById('deals');
+            container.innerHTML = '';
+
+            bazaarData.forEach(opp => {
+                const div = document.createElement('div');
+                div.className = 'card';
+                div.innerHTML = `
+                    <div class="card-inner">
+                        <div class="card-top">
+                            <div class="item-info">
+                                <img src="https://sky.coflnet.com/static/icon/${opp.tag.toUpperCase()}" class="item-image" onerror="this.onerror=null;this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22><rect width=%2248%22 height=%2248%22 fill=%22%23333%22/></svg>'">
+                                <div class="item-details">
+                                    <div class="item-label">Bazaar Flip</div>
+                                    <div class="item-name">${opp.name}</div>
+                                </div>
+                            </div>
+                            <div class="chart-container"><div class="chart-loading">INSTANT</div></div>
+                        </div>
+                        <div class="price-section">
+                            <div class="price-main">Spread ${opp.spread.toLocaleString()}</div>
+                            <div class="discount-badge">${opp.spread_percent.toFixed(1)}%</div>
+                        </div>
+                        <div class="reference-prices">
+                            <div>Buy: <span>${opp.buy_price.toLocaleString()}</span></div>
+                            <div>Sell: <span>${opp.sell_price.toLocaleString()}</span></div>
+                            <div>Volume: <span>${opp.total_volume.toLocaleString()}</span></div>
+                        </div>
+                    </div>
+                    <button class="btn">Instant Flip Opportunity</button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Bazaar refresh every 60 seconds
+        setInterval(() => {
+            if (currentTab === 'bazaar') loadBazaar();
+        }, 60000);
+
+        let lastSuccessfulCheck = Date.now();
+        
+        async function checkAuctionsAvailability() {
+            if (auctionUUIDs.size === 0) return;
+
+            try {
+                const minPrice = document.getElementById('minPrice').value || 500000;
+                const maxPrice = document.getElementById('maxPrice').value || 2000000000;
+                const discount = document.getElementById('discountPercent').value || 10;
+                const url = `${backendUrl}/data?mode=${currentComparisonMode}&min_price=${minPrice}&max_price=${maxPrice}&discount=${discount}`;
+                const r = await fetch(url);
+                if (!r.ok) return;
+                
+                const data = await r.json();
+                if (!data.deals || data.status.includes('Initializing') || data.status.includes('ERROR')) return;
+                
+                lastSuccessfulCheck = Date.now();
+                const activeAuctionIds = new Set(data.deals.map(d => d.id));
+                
+                let removedAny = false;
+                for (const [dealId] of auctionUUIDs.entries()) {
+                    if (!activeAuctionIds.has(dealId)) {
+                        currentDeals.delete(dealId);
+                        auctionUUIDs.delete(dealId);
+                        removedAny = true;
+                    }
+                }
+                
+                if (removedAny) renderDeals();
+            } catch(e) {
+                console.error("Error checking auction availability:", e);
+            }
+        }
+
+        setInterval(checkAuctionsAvailability, 1000);
+
+        async function update() {
+            if (currentTab !== 'auction') {
+                setTimeout(update, 1000);
+                return;
+            }
+
+            try {
+                const minPrice = document.getElementById('minPrice').value || 500000;
+                const maxPrice = document.getElementById('maxPrice').value || 2000000000;
+                const discount = document.getElementById('discountPercent').value || 10;
+                const r = await fetch(`${backendUrl}/data?mode=${currentComparisonMode}&min_price=${minPrice}&max_price=${maxPrice}&discount=${discount}`);
+                const data = await r.json();
+                document.getElementById('backend-status-text').innerText = data.status;
+
+                if (data.status.includes('Initializing') || data.status.includes('ERROR')) {
+                    setTimeout(update, 1000);
+                    return;
+                }
+
+                let needsRerender = false;
+                
+                const backendDealIds = new Set(data.deals.map(d => d.id));
+                for (const dismissedId of [...dismissedDeals]) {
+                    if (!backendDealIds.has(dismissedId)) {
+                        dismissedDeals.delete(dismissedId);
+                    }
+                }
+
+                data.deals.forEach(d => {
+                    const dealKey = d.id;
+                    
+                    if (dismissedDeals.has(dealKey)) return;
+                    
+                    const isDuplicate = seenTags.has(d.tag);
+                    
+                    if (!currentDeals.has(dealKey) && (showDuplicates || !isDuplicate)) {
+                        currentDeals.set(dealKey, d);
+                        if (!showDuplicates) seenTags.add(d.tag);
+                        
+                        const uuidMatch = d.cmd.match(/viewauction (.+)/);
+                        if (uuidMatch) auctionUUIDs.set(dealKey, uuidMatch[1]);
+                        
+                        needsRerender = true;
+                        document.getElementById('beep').play().catch(() => {});
+                        
+                        const timerId = setTimeout(() => {
+                            if (currentDeals.has(dealKey)) {
+                                dismissedDeals.add(dealKey);
+                                removeDealGracefully(dealKey);
+                            }
+                        }, 45000);
+                        dealTimers.set(dealKey, timerId);
+                    }
+                });
+
+                if (needsRerender) renderDeals();
+            } catch(e) {
+                console.error("Error in update:", e);
+            }
+            setTimeout(update, 1000);
+        }
+        update();
+    </script>
 </body>
 </html>
