@@ -62,6 +62,33 @@
         .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;}
         .logo { font-weight: 800; font-size: 14px; letter-spacing: -0.05em; display: flex; align-items: center; }
         .logo svg { margin-right: 8px; }
+        
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--accents-2);
+        }
+        .tab {
+            padding: 10px 20px;
+            background: transparent;
+            border: none;
+            color: var(--accents-8);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+        .tab:hover {
+            color: var(--fg);
+        }
+        .tab.active {
+            color: var(--success);
+            border-bottom-color: var(--success);
+        }
+        
         .status { font-size: 12px; color: var(--accents-8); display: flex; align-items: center; margin-top: 5px; gap: 10px; flex-wrap: wrap; }
         .status-dot { width: 6px; height: 6px; background: var(--success); border-radius: 50%; margin-right: 8px; box-shadow: 0 0 8px var(--success); }
 
@@ -113,6 +140,9 @@
 
         .card-inner { padding: 16px; flex: 1; }
         .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 10px; }
+        .item-info { display: flex; gap: 12px; flex: 1; min-width: 0; align-items: flex-start; }
+        .item-image { width: 48px; height: 48px; background: var(--accents-1); border-radius: 4px; border: 1px solid var(--accents-2); flex-shrink: 0; object-fit: contain; }
+        .item-details { flex: 1; min-width: 0; }
         .item-name { font-size: 14px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.3; }
         .item-label { font-size: 10px; color: var(--accents-8); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
 
@@ -265,13 +295,6 @@
                     <span id="session-timer">0M 0S</span>
                 </div>
                 <span id="backend-status-text">Initializing...</span>
-                <div class="comparison-mode-selector">
-                    <label for="comparisonMode">Compare:</label>
-                    <select id="comparisonMode">
-                        <option value="next_bin" selected>Next BIN</option>
-                        <option value="avg">7-Day Avg</option>
-                    </select>
-                </div>
                 <div class="theme-selector">
                     <label for="themeSelect">Theme:</label>
                     <select id="themeSelect">
@@ -295,14 +318,44 @@
                         <option value="system">System</option>
                     </select>
                 </div>
-                <div class="comparison-mode-selector">
-                    <label for="duplicatesToggle" style="cursor: pointer;">
-                        <input type="checkbox" id="duplicatesToggle" style="margin-right: 3px; cursor: pointer;">
-                        Show Duplicates
-                    </label>
-                </div>
             </div>
         </div>
+        
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('auction')">AH Sniping</button>
+            <button class="tab" onclick="switchTab('bazaar')">Bazaar Flipping</button>
+        </div>
+        
+        <!-- Configuration (only for auction tab) -->
+        <div id="auctionConfig" class="status" style="margin-bottom: 15px;">
+            <div class="comparison-mode-selector">
+                <label for="comparisonMode">Compare:</label>
+                <select id="comparisonMode">
+                    <option value="next_bin" selected>Next BIN</option>
+                    <option value="avg">7-Day Avg</option>
+                </select>
+            </div>
+            <div class="comparison-mode-selector">
+                <label for="minPrice">Min:</label>
+                <input type="number" id="minPrice" value="500000" style="width: 100px; background: var(--accents-1); color: var(--fg); border: 1px solid var(--accents-2); border-radius: 4px; padding: 4px 6px; font-size: 11px;">
+            </div>
+            <div class="comparison-mode-selector">
+                <label for="maxPrice">Max:</label>
+                <input type="number" id="maxPrice" value="2000000000" style="width: 120px; background: var(--accents-1); color: var(--fg); border: 1px solid var(--accents-2); border-radius: 4px; padding: 4px 6px; font-size: 11px;">
+            </div>
+            <div class="comparison-mode-selector">
+                <label for="discountPercent">Discount %:</label>
+                <input type="number" id="discountPercent" value="10" step="1" style="width: 60px; background: var(--accents-1); color: var(--fg); border: 1px solid var(--accents-2); border-radius: 4px; padding: 4px 6px; font-size: 11px;">
+            </div>
+            <div class="comparison-mode-selector">
+                <label for="duplicatesToggle" style="cursor: pointer;">
+                    <input type="checkbox" id="duplicatesToggle" style="margin-right: 3px; cursor: pointer;">
+                    Show Duplicates
+                </label>
+            </div>
+        </div>
+        
         <div id="deals" class="deals-grid"></div>
     </div>
     
@@ -348,6 +401,8 @@
         let dealTimers = new Map(); // Track timers for each deal
         let seenTags = new Set(); // Track which item tags we've already shown
         let dismissedDeals = new Set(); // Track deals we've dismissed (by timer or click)
+        let currentTab = 'auction'; // 'auction' or 'bazaar'
+        let bazaarData = [];
 
         // Set selectors to saved values
         document.getElementById('themeSelect').value = savedTheme;
@@ -397,27 +452,6 @@
             document.getElementById('deals').innerHTML = '';
         });
 
-        // NEW: Graceful removal function (this was missing!)
-        function removeDealGracefully(id) {
-            const card = document.getElementById(id);
-            if (card) {
-                card.classList.add('removing');
-                setTimeout(() => {
-                    if (card.parentNode) {
-                        card.parentNode.removeChild(card);
-                    }
-                    currentDeals.delete(id);
-                    auctionUUIDs.delete(id);
-                    dealTimers.delete(id);
-                }, 500); // matches CSS transition duration
-            } else {
-                // Card already gone from DOM
-                currentDeals.delete(id);
-                auctionUUIDs.delete(id);
-                dealTimers.delete(id);
-            }
-        }
-
         async function fetchWithRetry(url) {
             const proxies = [`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`, `https://corsproxy.io/?${encodeURIComponent(url)}` ];
             for (let proxy of proxies) {
@@ -466,6 +500,7 @@
                     </svg>
                 `;
                 
+                // Add click handler to open modal
                 container.style.cursor = 'pointer';
                 container.onclick = () => openChartModal(tag);
             } catch (e) {
@@ -492,6 +527,7 @@
 
         function changeChartTimeframe(timeframe) {
             currentTimeframe = timeframe;
+            // Update active button
             document.querySelectorAll('.chart-timeframe-btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
             loadLargeChart();
@@ -511,11 +547,13 @@
                     return;
                 }
 
+                // Convert to chart format
                 let data = response.data.map(d => ({
                     price: d.price,
                     time: d.timestamp
                 }));
 
+                // Filter outliers
                 const prices = data.map(d => d.price);
                 const sortedPrices = [...prices].sort((a, b) => a - b);
                 const median = sortedPrices[Math.floor(sortedPrices.length / 2)];
@@ -538,6 +576,7 @@
             const height = 400;
             const padding = { top: 30, right: 60, bottom: 40, left: 60 };
             
+            // Calculate price range
             const prices = data.map(d => d.price);
             const maxPrice = Math.max(...prices);
             const minPrice = Math.min(...prices);
@@ -545,6 +584,7 @@
             
             let svg = `<svg width="${width + 80}" height="${height}" style="overflow:visible">`;
             
+            // Grid lines
             for (let i = 0; i <= 5; i++) {
                 const y = padding.top + (height - padding.top - padding.bottom) * i / 5;
                 const price = maxPrice - (priceRange * i / 5);
@@ -552,9 +592,11 @@
                 svg += `<text x="${width + padding.left + 5}" y="${y + 4}" class="axis-label" fill="#888">${Math.round(price).toLocaleString()}</text>`;
             }
             
+            // Plot area dimensions
             const plotWidth = width - padding.left;
             const plotHeight = height - padding.top - padding.bottom;
             
+            // Create line path connecting all points
             let linePath = "";
             data.forEach((point, i) => {
                 const x = padding.left + (i / (data.length - 1)) * plotWidth;
@@ -562,16 +604,23 @@
                 linePath += (i === 0 ? "M" : "L") + ` ${x} ${y}`;
             });
             
+            // Draw line
             svg += `<path d="${linePath}" fill="none" stroke="#0070f3" stroke-width="3" />`;
             
+            // Draw points
             data.forEach((point, i) => {
                 const x = padding.left + (i / (data.length - 1)) * plotWidth;
                 const y = padding.top + plotHeight * (1 - (point.price - minPrice) / priceRange);
+                
+                // Determine color based on position
                 const pricePosition = (point.price - minPrice) / priceRange;
                 const color = pricePosition > 0.5 ? '#4af6c3' : '#ff6b6b';
+                
+                // Draw point
                 svg += `<circle cx="${x}" cy="${y}" r="4" fill="${color}" stroke="#000" stroke-width="1" />`;
             });
             
+            // Time labels
             const numLabels = Math.min(6, data.length);
             for (let i = 0; i < numLabels; i++) {
                 const dataIndex = Math.floor((data.length - 1) * i / (numLabels - 1));
@@ -581,6 +630,7 @@
                 svg += `<text x="${x}" y="${height - 10}" class="axis-label" text-anchor="middle" font-size="9">${label}</text>`;
             }
             
+            // Title and legend
             svg += `<text x="${padding.left}" y="15" class="axis-label" fill="#0070f3" font-weight="bold">Sold Auction Prices (Your Database)</text>`;
             svg += `<text x="${width + padding.left}" y="15" class="axis-label" fill="#888" text-anchor="end">${data.length} sales</text>`;
             
@@ -588,6 +638,7 @@
             container.innerHTML = svg;
         }
 
+        // Close modal on background click
         document.addEventListener('click', (e) => {
             if (e.target.id === 'chartModal') {
                 closeChartModal();
@@ -612,13 +663,18 @@
                 let displayedDiscount = currentComparisonMode === 'next_bin' ? d.disc_vs_next_bin : d.disc_vs_avg;
                 let referenceNextBin = d.next_lowest_bin_price ? d.next_lowest_bin_price.toLocaleString() : 'N/A';
                 let referenceAvg = d.avg_price ? d.avg_price.toLocaleString() : 'N/A';
+                
+                const imageUrl = d.image || `https://sky.coflnet.com/static/icon/${d.tag}`;
 
                 div.innerHTML = `
                     <div class="card-inner">
                         <div class="card-top">
-                            <div style="flex: 1; min-width: 0;">
-                                <div class="item-label">Market Listing</div>
-                                <div class="item-name">${d.name}</div>
+                            <div class="item-info">
+                                <img src="${imageUrl}" class="item-image" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22><rect width=%2248%22 height=%2248%22 fill=%22%23333%22/></svg>'">
+                                <div class="item-details">
+                                    <div class="item-label">Market Listing</div>
+                                    <div class="item-name">${d.name}</div>
+                                </div>
                             </div>
                             <div id="c-${d.displayId || d.id}" class="chart-container"><div class="chart-loading">LOADING...</div></div>
                         </div>
@@ -640,17 +696,9 @@
             });
         }
 
-        // IMPROVED cp() - now cancels timer and cleans up properly
         function cp(cmd, id) {
             navigator.clipboard.writeText("/" + cmd).then(() => {
-                dismissedDeals.add(id);
-
-                // Cancel any pending expiration timer
-                if (dealTimers.has(id)) {
-                    clearTimeout(dealTimers.get(id));
-                    dealTimers.delete(id);
-                }
-
+                dismissedDeals.add(id); // Mark as dismissed
                 removeDealGracefully(id);
             });
         }
@@ -675,15 +723,8 @@
                 let removedAny = false;
                 for (const [dealId, uuid] of auctionUUIDs.entries()) {
                     if (!activeAuctionIds.has(dealId)) {
-                        // Cancel timer if still pending
-                        if (dealTimers.has(dealId)) {
-                            clearTimeout(dealTimers.get(dealId));
-                            dealTimers.delete(dealId);
-                        }
                         currentDeals.delete(dealId);
                         auctionUUIDs.delete(dealId);
-                        dismissedDeals.add(dealId);
-                        removeDealGracefully(dealId);
                         removedAny = true;
                     }
                 }
@@ -715,8 +756,10 @@
 
                 let needsRerender = false;
                 
+                // Get current backend deal IDs
                 const backendDealIds = new Set(data.deals.map(d => d.id));
                 
+                // Clean up dismissedDeals - remove any that are no longer in backend
                 for (const dismissedId of dismissedDeals) {
                     if (!backendDealIds.has(dismissedId)) {
                         dismissedDeals.delete(dismissedId);
@@ -726,16 +769,20 @@
                 data.deals.forEach(d => {
                     const dealKey = d.id;
                     
+                    // Skip if we've already dismissed this deal
                     if (dismissedDeals.has(dealKey)) {
                         return;
                     }
                     
+                    // Check if this tag has already been shown (for duplicate filtering)
                     const isDuplicate = seenTags.has(d.tag);
                     
+                    // Only add if: (show duplicates is on) OR (not a duplicate)
                     if (!currentDeals.has(dealKey) && (showDuplicates || !isDuplicate)) {
+                        // Store with modified key
                         const dealData = { ...d, displayId: dealKey, originalId: d.id };
                         currentDeals.set(dealKey, dealData);
-                        seenTags.add(d.tag);
+                        seenTags.add(d.tag); // Mark this tag as seen
                         
                         const uuidMatch = d.cmd.match(/viewauction (.+)/);
                         if (uuidMatch) {
@@ -744,14 +791,22 @@
                         needsRerender = true;
                         document.getElementById('beep').play().catch(()=> {});
                         
-                        // Set 45-second expiration timer
+                        // Set expiration timer with graceful removal
+                        const dealAddedTime = Date.now();
                         const timerId = setTimeout(() => {
-                            if (currentDeals.has(dealKey)) {
-                                dismissedDeals.add(dealKey);
+                            const elapsed = Date.now() - dealAddedTime;
+                            console.log('Timer callback fired!', dealKey, 'after', elapsed, 'ms');
+                            if(currentDeals.has(dealKey)) {
+                                console.log('Deal expired (timer):', dealData.name, dealKey);
+                                dismissedDeals.add(dealKey); // Mark as dismissed so it won't re-appear
                                 removeDealGracefully(dealKey);
+                            } else {
+                                console.log('Deal already removed:', dealKey);
                             }
                         }, 45000);
                         dealTimers.set(dealKey, timerId);
+                        
+                        console.log('Deal added:', dealData.name, dealKey, 'Timer ID:', timerId, 'set for 45s at', new Date().toISOString());
                     }
                 });
 
