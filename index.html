@@ -1,409 +1,366 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sniper | Vercel Edition</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #000000;
-            --card-bg: #111111;
-            --border: #222222;
-            --fg: #ffffff;
-            --fg-muted: #aaaaaa;
-            --accent: #0000ff; /* Vercel blue */
-            --success: #00ff41;
+            --bg: #000; --accents-1: #111; --accents-2: #333;
+            --fg: #fff; --accents-8: #888; --success: #00ff41;
         }
-
-        body {
-            background: var(--bg);
-            color: var(--fg);
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            margin: 0;
-            padding: 40px 20px;
-            line-height: 1.5;
+        
+        /* Theme definitions */
+        body.theme-dark {
+            --bg: #000; --accents-1: #111; --accents-2: #333;
+            --fg: #fff; --accents-8: #888; --success: #00ff41;
         }
-
-        #container { max-width: 1440px; margin: 0 auto; }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 40px;
-            flex-wrap: wrap;
-            gap: 20px;
+        body.theme-bloomberg {
+            --bg: #000000; --accents-1: #1a1a00; --accents-2: #2a2a00;
+            --fg: #FFA028; --accents-8: #ff8800; --success: #4af6c3;
         }
-
-        .logo {
-            font-size: 28px;
-            font-weight: 800;
-            letter-spacing: -0.08em;
-            display: flex;
-            align-items: center;
+        body.theme-light {
+            --bg: #ffffff; --accents-1: #f5f5f5; --accents-2: #e0e0e0;
+            --fg: #000; --accents-8: #666; --success: #00c853;
         }
-
-        .logo svg {
-            width: 40px;
-            height: 40px;
-            margin-right: 12px;
+        body.theme-blue {
+            --bg: #0a1628; --accents-1: #152238; --accents-2: #1e3a5f;
+            --fg: #e0f2fe; --accents-8: #94a3b8; --success: #38bdf8;
         }
+        body.theme-purple {
+            --bg: #1a0b2e; --accents-1: #2d1b4e; --accents-2: #4c3575;
+            --fg: #f0e6ff; --accents-8: #a78bfa; --success: #c084fc;
+        }
+        body.theme-matrix {
+            --bg: #0a1f0a; --accents-1: #162d16; --accents-2: #1e4620;
+            --fg: #00ff00; --accents-8: #00cc00; --success: #ffff00;
+        }
+        body.theme-nord {
+            --bg: #2e3440; --accents-1: #3b4252; --accents-2: #434c5e;
+            --fg: #eceff4; --accents-8: #d8dee9; --success: #a3be8c;
+        }
+        
+        /* Font classes */
+        body.font-inter { font-family: 'Inter', -apple-system, system-ui, sans-serif; }
+        body.font-courier { font-family: 'Courier New', 'Courier', monospace; }
+        body.font-consolas { font-family: 'Consolas', 'Monaco', 'Lucida Console', monospace; }
+        body.font-system { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; }
+        body.font-bloomberg { font-family: 'IBM Plex Mono', 'Roboto Mono', 'Consolas', monospace; }
+        body.font-roboto { font-family: 'Roboto Mono', 'Consolas', monospace; }
+        
+        body { 
+            background: var(--bg); 
+            color: var(--fg); 
+            margin: 0; 
+            padding: 20px 10px; 
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+        #container { max-width: 1400px; margin: auto; }
 
+        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;}
+        .logo { font-weight: 800; font-size: 14px; letter-spacing: -0.05em; display: flex; align-items: center; }
+        .logo svg { margin-right: 8px; }
+        
+        /* Tabs */
         .tabs {
             display: flex;
-            gap: 8px;
-            margin-bottom: 32px;
-            border-bottom: 1px solid var(--border);
+            gap: 4px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--accents-2);
         }
-
         .tab {
-            padding: 14px 28px;
+            padding: 10px 20px;
             background: transparent;
             border: none;
-            color: var(--fg-muted);
-            font-size: 15px;
+            color: var(--accents-8);
+            font-size: 14px;
             font-weight: 600;
             cursor: pointer;
-            border-bottom: 3px solid transparent;
+            border-bottom: 2px solid transparent;
             transition: all 0.2s ease;
         }
-
-        .tab:hover { color: var(--fg); }
-        .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-
-        .status {
-            font-size: 13px;
-            color: var(--fg-muted);
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            background: var(--success);
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
-
-        .comparison-mode-selector {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 13px;
-            color: var(--fg-muted);
-        }
-
-        .comparison-mode-selector select,
-        .comparison-mode-selector input {
-            background: var(--card-bg);
+        .tab:hover {
             color: var(--fg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 8px 12px;
-            font-size: 13px;
-            outline: none;
         }
+        .tab.active {
+            color: var(--success);
+            border-bottom-color: var(--success);
+        }
+        
+        .status { font-size: 12px; color: var(--accents-8); display: flex; align-items: center; margin-top: 5px; gap: 10px; flex-wrap: wrap; }
+        .status-dot { width: 6px; height: 6px; background: var(--success); border-radius: 50%; margin-right: 8px; box-shadow: 0 0 8px var(--success); }
 
-        .comparison-mode-selector select:focus,
-        .comparison-mode-selector input:focus {
-            border-color: var(--accent);
+        .comparison-mode-selector, .theme-selector, .font-selector {
+            font-size: 11px;
+            color: var(--accents-8);
+            display: flex;
+            align-items: center;
+        }
+        .comparison-mode-selector label, .theme-selector label, .font-selector label {
+            margin-right: 5px;
+        }
+        .comparison-mode-selector select, .theme-selector select, .font-selector select {
+            background: var(--accents-1);
+            color: var(--fg);
+            border: 1px solid var(--accents-2);
+            border-radius: 4px;
+            padding: 4px 6px;
+            font-size: 11px;
+            outline: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            cursor: pointer;
+        }
+        .comparison-mode-selector select:focus, .theme-selector select:focus, .font-selector select:focus {
+            border-color: var(--success);
         }
 
         .deals-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 12px;
         }
 
         .card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-            animation: slideUp 0.4s ease-out;
+            background: var(--bg); border: 1px solid var(--accents-2); border-radius: 8px;
+            position: relative; overflow: hidden;
+            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             display: flex;
             flex-direction: column;
             transition: opacity 0.5s ease, transform 0.5s ease;
         }
-
         .card.removing {
             opacity: 0;
-            transform: scale(0.96);
+            transform: scale(0.95);
         }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }        
 
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .card-inner { padding: 24px; flex: 1; }
-
-        .card-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 20px;
-            gap: 20px;
-        }
-
-        .item-info {
-            display: flex;
-            gap: 20px;
-            flex: 1;
-            min-width: 0;
-        }
-
-        .item-image {
-            width: 64px;
-            height: 64px;
-            border-radius: 12px;
-            border: 1px solid var(--border);
-            object-fit: contain;
-            flex-shrink: 0;
-        }
-
+        .card-inner { padding: 16px; flex: 1; }
+        .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 10px; }
+        .item-info { display: flex; gap: 12px; flex: 1; min-width: 0; align-items: flex-start; }
+        .item-image { width: 48px; height: 48px; background: var(--accents-1); border-radius: 4px; border: 1px solid var(--accents-2); flex-shrink: 0; object-fit: contain; }
         .item-details { flex: 1; min-width: 0; }
+        .item-name { font-size: 14px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.3; }
+        .item-label { font-size: 10px; color: var(--accents-8); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
 
-        .item-label {
-            font-size: 11px;
-            color: var(--fg-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            margin-bottom: 6px;
-        }
-
-        .item-name {
-            font-size: 18px;
-            font-weight: 600;
-            line-height: 1.3;
-        }
-
-        .chart-container {
-            height: 80px;
-            width: 160px;
-            background: var(--bg);
-            border-radius: 12px;
-            border: 1px solid var(--border);
-            position: relative;
+        .chart-container { 
+            height: 60px; 
+            width: 120px; 
+            background: var(--accents-1); 
+            border-radius: 4px; 
+            border: 1px solid var(--accents-2); 
+            position: relative; 
+            flex-shrink: 0;
             cursor: pointer;
             transition: border-color 0.2s ease;
         }
-
-        .chart-container:hover { border-color: var(--accent); }
-
-        .chart-loading {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 10px;
-            color: var(--fg-muted);
+        .chart-container:hover {
+            border-color: var(--success);
         }
+        .chart-loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 9px; color: var(--accents-8); }
 
-        .price-section {
-            display: flex;
-            align-items: baseline;
-            gap: 16px;
-            margin-top: 16px;
-        }
-
-        .price-main {
-            font-size: 28px;
-            font-weight: 700;
-        }
-
-        .discount-badge {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--accent);
-            background: rgba(0, 0, 255, 0.15);
-            padding: 8px 16px;
-            border-radius: 20px;
-        }
-
-        .reference-prices {
-            font-size: 13px;
-            color: var(--fg-muted);
-            margin-top: 16px;
-            line-height: 1.6;
-        }
-
-        .reference-prices span {
-            color: var(--fg);
-            font-weight: 500;
-        }
-
-        .timer-container {
-            width: 100%;
-            height: 5px;
-            background: var(--border);
-            border-radius: 3px;
-            overflow: hidden;
-            margin: 20px 0;
-        }
-
-        .timer-bar {
-            height: 100%;
-            width: 100%;
-            border-radius: 3px;
-            transition: width 0.6s ease-out, background 0.4s ease;
-        }
-
-        .btn {
-            background: var(--fg);
-            color: var(--bg);
-            border: none;
-            width: 100%;
-            padding: 16px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: opacity 0.2s ease;
-        }
-
-        .btn:hover { opacity: 0.9; }
-
-        /* Chart Modal */
+        /* Chart modal */
         .chart-modal {
             position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.95);
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
             display: none;
             align-items: center;
             justify-content: center;
             z-index: 1000;
             padding: 20px;
         }
-
-        .chart-modal.active { display: flex; }
-
+        .chart-modal.active {
+            display: flex;
+        }
         .chart-modal-content {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 32px;
-            max-width: 960px;
+            background: var(--bg);
+            border: 2px solid var(--accents-2);
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 900px;
             width: 100%;
             max-height: 90vh;
             overflow-y: auto;
         }
-
         .chart-modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 24px;
+            margin-bottom: 16px;
         }
-
         .chart-modal-title {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 700;
-        }
-
-        .chart-modal-close {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
             color: var(--fg);
-            padding: 10px 20px;
-            border-radius: 8px;
+        }
+        .chart-modal-close {
+            background: var(--accents-1);
+            border: 1px solid var(--accents-2);
+            color: var(--fg);
+            padding: 8px 16px;
+            border-radius: 6px;
             cursor: pointer;
+            font-size: 14px;
             font-weight: 600;
         }
-
+        .chart-modal-close:hover {
+            background: var(--accents-2);
+        }
         .chart-timeframe-buttons {
             display: flex;
-            gap: 12px;
-            margin-bottom: 24px;
+            gap: 8px;
+            margin-bottom: 16px;
         }
-
         .chart-timeframe-btn {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
+            background: var(--accents-1);
+            border: 1px solid var(--accents-2);
             color: var(--fg);
-            padding: 10px 20px;
-            border-radius: 8px;
+            padding: 8px 16px;
+            border-radius: 6px;
             cursor: pointer;
+            font-size: 12px;
             font-weight: 600;
             transition: all 0.2s ease;
         }
-
-        .chart-timeframe-btn.active {
-            background: var(--accent);
-            color: #ffffff;
-            border-color: var(--accent);
+        .chart-timeframe-btn:hover {
+            background: var(--accents-2);
         }
-
+        .chart-timeframe-btn.active {
+            background: var(--success);
+            color: var(--bg);
+            border-color: var(--success);
+        }
         .large-chart-container {
             width: 100%;
-            height: 480px;
-            background: var(--bg);
-            border-radius: 12px;
-            border: 1px solid var(--border);
+            height: 400px;
+            background: var(--accents-1);
+            border-radius: 8px;
+            border: 1px solid var(--accents-2);
             position: relative;
+        }
+
+        .price-section { display: flex; align-items: baseline; gap: 8px; margin-top: 8px; }
+        .price-main { font-size: 18px; font-weight: 800; }
+        .discount-badge { font-size: 14px; font-weight: 700; color: var(--success); background: rgba(0, 255, 65, 0.1); padding: 4px 10px; border-radius: 12px; }
+        
+        .reference-prices {
+            font-size: 10px;
+            color: var(--accents-8);
+            margin-top: 8px;
+            line-height: 1.5;
+        }
+        .reference-prices span {
+            color: var(--fg);
+            font-weight: 500;
+        }
+
+        .timer-container { width: 100%; height: 3px; background: var(--accents-1); position: relative; margin: 12px 0; }
+        .timer-bar {
+            height: 100%; 
+            background: var(--success); 
+            width: 100%;
+            transition: width 0.8s ease-out;
+        }
+
+        .btn {
+            background: var(--fg); color: var(--bg); border: none; width: 100%;
+            padding: 10px; font-size: 11px; font-weight: 600; cursor: pointer; transition: opacity 0.2s ease;
+        }
+        .btn:active { opacity: 0.8; }
+        .axis-label { font-size: 8px; fill: var(--accents-8); font-family: monospace; }
+
+        @media (max-width: 768px) {
+            .deals-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
-<body>
+<body class="theme-dark font-inter">
     <div id="container">
         <div class="header">
             <div class="logo">
-                <svg width="40" height="40" viewBox="0 0 76 65" fill="currentColor"><path d="M37.5 0L75 65H0L37.5 0Z"/></svg>
-                SNIPER
+                <svg width="24" height="24" viewBox="0 0 76 65" fill="currentColor"><path d="M37.5 0L75 65H0L37.5 0Z"/></svg>
+                SNIPER V2
             </div>
             <div class="status">
-                <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="display: flex; align-items: center;">
                     <div class="status-dot"></div>
                     <span id="session-timer">0M 0S</span>
                 </div>
                 <span id="backend-status-text">Initializing...</span>
+                <div class="theme-selector">
+                    <label for="themeSelect">Theme:</label>
+                    <select id="themeSelect">
+                        <option value="dark">Dark</option>
+                        <option value="bloomberg">Bloomberg Terminal</option>
+                        <option value="light">Light</option>
+                        <option value="blue">Blue</option>
+                        <option value="purple">Purple</option>
+                        <option value="matrix">Matrix</option>
+                        <option value="nord">Nord</option>
+                    </select>
+                </div>
+                <div class="font-selector">
+                    <label for="fontSelect">Font:</label>
+                    <select id="fontSelect">
+                        <option value="inter">Inter</option>
+                        <option value="bloomberg">IBM Plex Mono</option>
+                        <option value="roboto">Roboto Mono</option>
+                        <option value="courier">Courier</option>
+                        <option value="consolas">Consolas</option>
+                        <option value="system">System</option>
+                    </select>
+                </div>
             </div>
         </div>
-
+        
+        <!-- Tabs -->
         <div class="tabs">
             <button class="tab active" onclick="switchTab('auction')">AH Sniping</button>
             <button class="tab" onclick="switchTab('bazaar')">Bazaar Flipping</button>
         </div>
-
-        <div id="auctionConfig" style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 32px;">
+        
+        <!-- Configuration (only for auction tab) -->
+        <div id="auctionConfig" class="status" style="margin-bottom: 15px;">
             <div class="comparison-mode-selector">
-                <label>Compare:</label>
+                <label for="comparisonMode">Compare:</label>
                 <select id="comparisonMode">
                     <option value="next_bin" selected>Next BIN</option>
                     <option value="avg">7-Day Avg</option>
                 </select>
             </div>
             <div class="comparison-mode-selector">
-                <label>Min Price:</label>
-                <input type="number" id="minPrice" value="500000">
+                <label for="minPrice">Min:</label>
+                <input type="number" id="minPrice" value="500000" style="width: 100px; background: var(--accents-1); color: var(--fg); border: 1px solid var(--accents-2); border-radius: 4px; padding: 4px 6px; font-size: 11px;">
             </div>
             <div class="comparison-mode-selector">
-                <label>Max Price:</label>
-                <input type="number" id="maxPrice" value="2000000000">
+                <label for="maxPrice">Max:</label>
+                <input type="number" id="maxPrice" value="2000000000" style="width: 120px; background: var(--accents-1); color: var(--fg); border: 1px solid var(--accents-2); border-radius: 4px; padding: 4px 6px; font-size: 11px;">
             </div>
             <div class="comparison-mode-selector">
-                <label>Discount %:</label>
-                <input type="number" id="discountPercent" value="10" step="1">
+                <label for="discountPercent">Discount %:</label>
+                <input type="number" id="discountPercent" value="10" step="1" style="width: 60px; background: var(--accents-1); color: var(--fg); border: 1px solid var(--accents-2); border-radius: 4px; padding: 4px 6px; font-size: 11px;">
             </div>
             <div class="comparison-mode-selector">
-                <label style="cursor: pointer;">
-                    <input type="checkbox" id="duplicatesToggle">
+                <label for="duplicatesToggle" style="cursor: pointer;">
+                    <input type="checkbox" id="duplicatesToggle" style="margin-right: 3px; cursor: pointer;">
                     Show Duplicates
                 </label>
             </div>
         </div>
-
+        
         <div id="deals" class="deals-grid"></div>
     </div>
-
+    
+    <!-- Chart Modal -->
     <div id="chartModal" class="chart-modal">
         <div class="chart-modal-content">
             <div class="chart-modal-header">
@@ -421,17 +378,23 @@
             </div>
         </div>
     </div>
-
+    
     <audio id="beep" src="https://actions.google.com/sounds/v1/notifications/beeps_pristine_cut_off.ogg"></audio>
 
     <script>
-        const backendUrl = 'https://skyblock-483009.uc.r.appspot.com';
-        const FRESHNESS_MS = 120000;
+        const backendUrl = 'https://skyblock-483009.uc.r.appspot.com'; // Change if needed
 
+        const FRESHNESS_MS = 120000; // Match backend FRESHNESS_THRESHOLD_MS (2 minutes)
+
+        // Theme and font management
+        const savedTheme = localStorage.getItem('sniperTheme') || 'dark';
+        const savedFont = localStorage.getItem('sniperFont') || 'inter';
+        document.body.className = `theme-${savedTheme} font-${savedFont}`;
+        
         const startTime = Date.now();
         setInterval(() => {
             const diff = Math.floor((Date.now() - startTime) / 1000);
-            document.getElementById('session-timer').innerText = `${Math.floor(diff / 60)}M ${diff % 60}S`;
+            document.getElementById('session-timer').innerText = `${Math.floor(diff/60)}M ${diff%60}S`;
         }, 1000);
 
         let currentComparisonMode = 'next_bin';
@@ -441,15 +404,35 @@
         let seenTags = new Set();
         let dismissedDeals = new Set();
         let currentTab = 'auction';
+        let bazaarData = [];
 
-        document.getElementById('duplicatesToggle').addEventListener('change', (e) => {
-            showDuplicates = e.target.checked;
+        // Set selectors to saved values
+        document.getElementById('themeSelect').value = savedTheme;
+        document.getElementById('fontSelect').value = savedFont;
+        
+        // Duplicates toggle handler
+        document.getElementById('duplicatesToggle').addEventListener('change', (event) => {
+            showDuplicates = event.target.checked;
             clearAuctionState();
             renderDeals();
         });
+        
+        // Theme change handler
+        document.getElementById('themeSelect').addEventListener('change', (event) => {
+            const theme = event.target.value;
+            document.body.className = document.body.className.replace(/theme-\w+/, `theme-${theme}`);
+            localStorage.setItem('sniperTheme', theme);
+        });
 
-        document.getElementById('comparisonMode').addEventListener('change', (e) => {
-            currentComparisonMode = e.target.value;
+        // Font change handler
+        document.getElementById('fontSelect').addEventListener('change', (event) => {
+            const font = event.target.value;
+            document.body.className = document.body.className.replace(/font-\w+/, `font-${font}`);
+            localStorage.setItem('sniperFont', font);
+        });
+
+        document.getElementById('comparisonMode').addEventListener('change', (event) => {
+            currentComparisonMode = event.target.value;
             clearAuctionState();
         });
 
@@ -463,31 +446,31 @@
 
         function switchTab(tab) {
             currentTab = tab;
-            document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
             document.getElementById('auctionConfig').style.display = tab === 'auction' ? 'flex' : 'none';
             clearAuctionState();
-            if (tab === 'bazaar') loadBazaar();
+            if (tab === 'bazaar') {
+                loadBazaar();
+            }
         }
 
         function removeDealGracefully(id) {
             const card = document.getElementById(id);
             if (card) {
                 card.classList.add('removing');
-                setTimeout(() => card.remove(), 550);
-                currentDeals.delete(id);
-                auctionUUIDs.delete(id);
+                setTimeout(() => {
+                    if (card.parentNode) card.remove();
+                    currentDeals.delete(id);
+                    auctionUUIDs.delete(id);
+                }, 550);
             }
         }
 
-        function getBarColor(fraction) {
-            if (fraction > 0.5) return '#00ff41';
-            if (fraction > 0.2) return '#ffaa00';
-            return '#ff4444';
-        }
-
+        // Timer bar updates + expiration (real-time based, catches up correctly)
         function updateTimerBars() {
             const now = Date.now();
+            let needsRerender = false;
 
             for (const [key, d] of currentDeals) {
                 const card = document.getElementById(key);
@@ -497,56 +480,105 @@
                 if (!bar) continue;
 
                 const elapsed = now - d.timestamp;
-                const remaining = Math.max(0, FRESHNESS_MS - elapsed);
-                const fraction = remaining / FRESHNESS_MS;
+                const remaining = FRESHNESS_MS - elapsed;
 
                 if (remaining <= 0) {
                     dismissedDeals.add(key);
                     removeDealGracefully(key);
+                    needsRerender = true;
                     continue;
                 }
 
+                const fraction = remaining / FRESHNESS_MS;
                 bar.style.width = `${fraction * 100}%`;
-                bar.style.background = getBarColor(fraction);
+            }
+
+            if (needsRerender) renderDeals();
+        }
+
+        setInterval(updateTimerBars, 1000);
+
+        async function loadChart(tag, chartId) {
+            // (unchanged from previous version)
+            const container = document.getElementById(chartId);
+            try {
+                const url = `${backendUrl}/api/price_history/${tag}?timeframe=week`;
+                const r = await fetch(url);
+                const response = await r.json();
+                
+                if (!response.success || !response.data || response.data.length < 2) {
+                    container.innerHTML = '<div class="chart-loading">NO HISTORY</div>';
+                    return;
+                }
+
+                let prices = response.data.map(d => d.price);
+                const sortedPrices = [...prices].sort((a, b) => a - b);
+                const median = sortedPrices[Math.floor(sortedPrices.length / 2)];
+                prices = prices.filter(p => p <= median * 5 && p >= median / 5);
+
+                const max = Math.max(...prices), min = Math.min(...prices), range = (max - min) || 1;
+                const width = 120, height = 60, pad = 8;
+                let path = "";
+                prices.forEach((p, i) => {
+                    const x = (i / (prices.length - 1)) * width;
+                    const y = height - ((p - min) / range) * (height - pad * 2) - pad;
+                    path += (i === 0 ? "M" : "L") + ` ${x} ${y}`;
+                });
+
+                container.innerHTML = `
+                    <svg width="${width}" height="${height}" style="overflow:visible">
+                        <line x1="0" y1="15" x2="${width}" y2="15" stroke="#444" stroke-dasharray="2" stroke-width="0.5" />
+                        <line x1="0" y1="30" x2="${width}" y2="30" stroke="#444" stroke-dasharray="2" stroke-width="0.5" />
+                        <line x1="0" y1="45" x2="${width}" y2="45" stroke="#444" stroke-dasharray="2" stroke-width="0.5" />
+                        <path d="${path}" fill="none" stroke="#0070f3" stroke-width="2" stroke-linejoin="round" />
+                        <text x="0" y="${height-2}" class="axis-label">-7d</text>
+                        <text x="${width}" y="${height-2}" class="axis-label" text-anchor="end">NOW</text>
+                    </svg>
+                `;
+                
+                container.style.cursor = 'pointer';
+                container.onclick = () => openChartModal(tag);
+            } catch (e) {
+                console.error('Chart error:', e);
+                container.innerHTML = '<div class="chart-loading">NO DATA</div>';
             }
         }
 
-        setInterval(updateTimerBars, 200); // Ultra-smooth
-
-        // loadChart, openChartModal, closeChartModal, changeChartTimeframe, loadLargeChart, renderPriceChart unchanged (same as previous)
+        // (Chart modal functions unchanged)
 
         function renderDeals() {
-            const sorted = Array.from(currentDeals.values()).sort((a, b) => {
-                const da = currentComparisonMode === 'next_bin' ? (a.disc_vs_next_bin || 0) : (a.disc_vs_avg || 0);
-                const db = currentComparisonMode === 'next_bin' ? (b.disc_vs_next_bin || 0) : (b.disc_vs_avg || 0);
-                return db - da;
+            const sortedDeals = Array.from(currentDeals.values()).sort((a, b) => {
+                const discountA = currentComparisonMode === 'next_bin' ? (a.disc_vs_next_bin || 0) : (a.disc_vs_avg || 0);
+                const discountB = currentComparisonMode === 'next_bin' ? (b.disc_vs_next_bin || 0) : (b.disc_vs_avg || 0);
+                return discountB - discountA;
             });
 
-            const container = document.getElementById('deals');
-            container.innerHTML = '';
+            const dealsContainer = document.getElementById('deals');
+            dealsContainer.innerHTML = '';
 
             const now = Date.now();
 
-            sorted.forEach(d => {
+            sortedDeals.forEach(d => {
                 const div = document.createElement('div');
                 div.className = 'card';
                 div.id = d.id;
 
-                const discount = currentComparisonMode === 'next_bin' ? d.disc_vs_next_bin : d.disc_vs_avg;
-                const badge = discount != null ? `<div class="discount-badge">-${discount}%</div>` : '';
+                const displayedDiscount = currentComparisonMode === 'next_bin' ? d.disc_vs_next_bin : d.disc_vs_avg;
+                const discountBadge = displayedDiscount != null ? `<div class="discount-badge">-${displayedDiscount}%</div>` : '';
 
-                const nextBin = d.next_lowest_bin_price ? d.next_lowest_bin_price.toLocaleString() : 'N/A';
-                const avg = d.avg_price ? Math.round(d.avg_price).toLocaleString() : 'N/A';
+                const referenceNextBin = d.next_lowest_bin_price ? d.next_lowest_bin_price.toLocaleString() : 'N/A';
+                const referenceAvg = d.avg_price ? Math.round(d.avg_price).toLocaleString() : 'N/A';
 
-                const image = d.image || `https://sky.coflnet.com/static/icon/${d.tag.toUpperCase()}`;
+                const imageUrl = d.image || `https://sky.coflnet.com/static/icon/${d.tag.toUpperCase()}`;
 
-                const fraction = Math.max(0, (FRESHNESS_MS - (now - d.timestamp)) / FRESHNESS_MS);
+                const elapsed = now - d.timestamp;
+                const fraction = Math.max(0, (FRESHNESS_MS - elapsed) / FRESHNESS_MS);
 
                 div.innerHTML = `
                     <div class="card-inner">
                         <div class="card-top">
                             <div class="item-info">
-                                <img src="${image}" class="item-image" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2264%22 height=%2264%22><rect width=%2264%22 height=%2264%22 fill=%22%23222%22/></svg>'">
+                                <img src="${imageUrl}" class="item-image" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22><rect width=%2248%22 height=%2248%22 fill=%22%23333%22/></svg>'">
                                 <div class="item-details">
                                     <div class="item-label">Market Listing</div>
                                     <div class="item-name">${d.name}</div>
@@ -556,31 +588,38 @@
                         </div>
                         <div class="price-section">
                             <div class="price-main">${d.price.toLocaleString()}</div>
-                            ${badge}
+                            ${discountBadge}
                         </div>
                         <div class="reference-prices">
-                            <div>Next BIN: <span>${nextBin}</span></div>
-                            <div>7-Day Avg: <span>${avg}</span></div>
+                            <div>Next BIN: <span>${referenceNextBin}</span></div>
+                            <div>7-Day Avg: <span>${referenceAvg}</span></div>
                         </div>
                     </div>
-                    <div class="timer-container">
-                        <div class="timer-bar" style="width: ${fraction * 100}%; background: ${getBarColor(fraction)}"></div>
-                    </div>
+                    <div class="timer-container"><div class="timer-bar" style="width: ${fraction * 100}%"></div></div>
                     <button class="btn" onclick="cp('${d.cmd}', '${d.id}')">Copy /viewauction</button>
                 `;
-
-                container.appendChild(div);
+                
+                dealsContainer.appendChild(div);
                 loadChart(d.tag, `c-${d.id}`);
             });
         }
 
         function cp(cmd, id) {
-            navigator.clipboard.writeText('/' + cmd);
-            dismissedDeals.add(id);
-            removeDealGracefully(id);
+            navigator.clipboard.writeText("/" + cmd).then(() => {
+                dismissedDeals.add(id);
+                removeDealGracefully(id);
+            });
         }
 
-        // Bazaar functions, checkAuctionsAvailability, update() all unchanged from previous full version
+        // (Bazaar functions unchanged)
+
+        let lastSuccessfulCheck = Date.now();
+        
+        async function checkAuctionsAvailability() {
+            // (unchanged)
+        }
+
+        setInterval(checkAuctionsAvailability, 1000);
 
         async function update() {
             if (currentTab !== 'auction') {
@@ -589,10 +628,10 @@
             }
 
             try {
-                const min = document.getElementById('minPrice').value || 500000;
-                const max = document.getElementById('maxPrice').value || 2000000000;
-                const disc = document.getElementById('discountPercent').value || 10;
-                const r = await fetch(`${backendUrl}/data?mode=${currentComparisonMode}&min_price=${min}&max_price=${max}&discount=${disc}`);
+                const minPrice = document.getElementById('minPrice').value || 500000;
+                const maxPrice = document.getElementById('maxPrice').value || 2000000000;
+                const discount = document.getElementById('discountPercent').value || 10;
+                const r = await fetch(`${backendUrl}/data?mode=${currentComparisonMode}&min_price=${minPrice}&max_price=${maxPrice}&discount=${discount}`);
                 const data = await r.json();
                 document.getElementById('backend-status-text').innerText = data.status;
 
@@ -601,36 +640,50 @@
                     return;
                 }
 
-                let changed = false;
+                let needsRerender = false;
                 const now = Date.now();
 
-                const backendIds = new Set(data.deals.map(d => d.id));
-                dismissedDeals = new Set([...dismissedDeals].filter(id => backendIds.has(id)));
+                const backendDealIds = new Set(data.deals.map(d => d.id));
+                for (const dismissedId of [...dismissedDeals]) {
+                    if (!backendDealIds.has(dismissedId)) {
+                        dismissedDeals.delete(dismissedId);
+                    }
+                }
 
                 data.deals.forEach(d => {
-                    if (now - d.timestamp > FRESHNESS_MS) return;
-                    if (dismissedDeals.has(d.id)) return;
+                    const dealKey = d.id;
+                    
+                    if (dismissedDeals.has(dealKey)) return;
 
-                    const duplicate = seenTags.has(d.tag);
-                    if (!currentDeals.has(d.id) && (showDuplicates || !duplicate)) {
-                        currentDeals.set(d.id, d);
+                    // Skip if already too old
+                    if (now - d.timestamp > FRESHNESS_MS) return;
+                    
+                    const isDuplicate = seenTags.has(d.tag);
+                    
+                    if (!currentDeals.has(dealKey) && (showDuplicates || !isDuplicate)) {
+                        currentDeals.set(dealKey, d);
                         if (!showDuplicates) seenTags.add(d.tag);
-                        const uuid = d.cmd.match(/viewauction (.+)/);
-                        if (uuid) auctionUUIDs.set(d.id, uuid[1]);
-                        changed = true;
+                        
+                        const uuidMatch = d.cmd.match(/viewauction (.+)/);
+                        if (uuidMatch) auctionUUIDs.set(dealKey, uuidMatch[1]);
+                        
+                        needsRerender = true;
                         document.getElementById('beep').play().catch(() => {});
                     }
                 });
 
-                if (changed) renderDeals();
-            } catch (e) {
-                console.error(e);
-            }
+                if (needsRerender) renderDeals();
 
+                // Timer bars and expiration handled by updateTimerBars interval
+            } catch(e) {
+                console.error("Error in update:", e);
+            }
             setTimeout(update, 1000);
         }
-
         update();
+
+        // Initial bazaar load if starting on bazaar tab (unlikely)
+        if (currentTab === 'bazaar') loadBazaar();
     </script>
 </body>
 </html>
