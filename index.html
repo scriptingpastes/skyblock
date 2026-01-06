@@ -499,7 +499,6 @@
         setInterval(updateTimerBars, 1000);
 
         async function loadChart(tag, chartId) {
-            // (unchanged from previous version)
             const container = document.getElementById(chartId);
             try {
                 const url = `${backendUrl}/api/price_history/${tag}?timeframe=week`;
@@ -543,7 +542,8 @@
                 container.innerHTML = '<div class="chart-loading">NO DATA</div>';
             }
         }
-         // Chart modal state
+
+        // Chart modal state
         let currentChartTag = null;
         let currentTimeframe = 'week';
 
@@ -572,7 +572,7 @@
             container.innerHTML = '<div class="chart-loading">Loading chart...</div>';
             
             try {
-                const url = `https://skyblock-483009.uc.r.appspot.com/api/price_history/${currentChartTag}?timeframe=${currentTimeframe}`;
+                const url = `${backendUrl}/api/price_history/${currentChartTag}?timeframe=${currentTimeframe}`;
                 const r = await fetch(url);
                 const response = await r.json();
                 
@@ -679,8 +679,6 @@
             }
         });
 
-        // (Chart modal functions unchanged)
-
         function renderDeals() {
             const sortedDeals = Array.from(currentDeals.values()).sort((a, b) => {
                 const discountA = currentComparisonMode === 'next_bin' ? (a.disc_vs_next_bin || 0) : (a.disc_vs_avg || 0);
@@ -746,12 +744,118 @@
             });
         }
 
-        // (Bazaar functions unchanged)
+        // Bazaar functions
+        async function loadBazaar() {
+            document.getElementById('deals').innerHTML = '<div style="color: var(--accents-8); text-align: center; padding: 40px;">Loading bazaar data...</div>';
+            
+            try {
+                const r = await fetch(`${backendUrl}/api/bazaar`);
+                const response = await r.json();
+                
+                if (!response.success) {
+                    document.getElementById('deals').innerHTML = '<div style="color: var(--accents-8); text-align: center; padding: 40px;">Failed to load bazaar data</div>';
+                    return;
+                }
+                
+                bazaarData = response.opportunities || [];
+                renderBazaar();
+            } catch (e) {
+                console.error('Bazaar load error:', e);
+                document.getElementById('deals').innerHTML = '<div style="color: var(--accents-8); text-align: center; padding: 40px;">Error loading bazaar</div>';
+            }
+        }
+
+        function renderBazaar() {
+            const dealsContainer = document.getElementById('deals');
+            dealsContainer.innerHTML = '';
+
+            if (bazaarData.length === 0) {
+                dealsContainer.innerHTML = '<div style="color: var(--accents-8); text-align: center; padding: 40px;">No bazaar opportunities found</div>';
+                return;
+            }
+
+            bazaarData.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'card';
+                
+                const imageUrl = `https://sky.coflnet.com/static/icon/${item.tag.toUpperCase()}`;
+                const profit = item.sell_price - item.buy_price;
+                const profitFormatted = profit >= 1000 ? `${(profit / 1000).toFixed(1)}K` : profit.toFixed(1);
+                
+                div.innerHTML = `
+                    <div class="card-inner">
+                        <div class="card-top">
+                            <div class="item-info">
+                                <img src="${imageUrl}" class="item-image" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22><rect width=%2248%22 height=%2248%22 fill=%22%23333%22/></svg>'">
+                                <div class="item-details">
+                                    <div class="item-label">Bazaar Item</div>
+                                    <div class="item-name">${item.name}</div>
+                                </div>
+                            </div>
+                            <div class="discount-badge">${item.spread_percent.toFixed(1)}%</div>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;">
+                            <div>
+                                <div style="font-size: 10px; color: var(--accents-8); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Buy Price</div>
+                                <div style="font-size: 16px; font-weight: 700;">${formatPrice(item.buy_price)}</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 10px; color: var(--accents-8); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Sell Price</div>
+                                <div style="font-size: 16px; font-weight: 700; color: var(--success);">${formatPrice(item.sell_price)}</div>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--accents-2);">
+                            <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 6px;">
+                                <span style="color: var(--accents-8);">Profit per unit:</span>
+                                <span style="font-weight: 700; color: var(--success);">+${profitFormatted}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 11px;">
+                                <span style="color: var(--accents-8);">Volume:</span>
+                                <span style="font-weight: 600;">${formatVolume(item.total_volume)}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn" onclick="copyBazaarCommand('${item.product_id}')">Copy /bz command</button>
+                `;
+                
+                dealsContainer.appendChild(div);
+            });
+        }
+
+        function formatPrice(price) {
+            if (price >= 1000000) {
+                return `${(price / 1000000).toFixed(2)}M`;
+            } else if (price >= 1000) {
+                return `${(price / 1000).toFixed(1)}K`;
+            }
+            return price.toFixed(1);
+        }
+
+        function formatVolume(volume) {
+            if (volume >= 1000000) {
+                return `${(volume / 1000000).toFixed(1)}M`;
+            } else if (volume >= 1000) {
+                return `${(volume / 1000).toFixed(1)}K`;
+            }
+            return volume.toString();
+        }
+
+        function copyBazaarCommand(productId) {
+            navigator.clipboard.writeText(`/bz ${productId}`).then(() => {
+                // Visual feedback
+                event.target.textContent = 'Copied!';
+                setTimeout(() => {
+                    event.target.textContent = 'Copy /bz command';
+                }, 1000);
+            });
+        }
 
         let lastSuccessfulCheck = Date.now();
         
         async function checkAuctionsAvailability() {
-            // (unchanged)
+            // Check auction availability logic here if needed
         }
 
         setInterval(checkAuctionsAvailability, 1000);
@@ -819,6 +923,13 @@
 
         // Initial bazaar load if starting on bazaar tab (unlikely)
         if (currentTab === 'bazaar') loadBazaar();
+        
+        // Periodic bazaar refresh (every 60 seconds when on bazaar tab)
+        setInterval(() => {
+            if (currentTab === 'bazaar' && bazaarData.length > 0) {
+                loadBazaar();
+            }
+        }, 60000);
     </script>
 </body>
 </html>
